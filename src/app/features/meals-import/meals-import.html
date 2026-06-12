@@ -1,0 +1,147 @@
+<app-shell title="Importar comidas">
+  <main class="app-shell">
+    <section class="hero">
+      <p class="eyebrow">Comidas</p>
+      <h1>Importar desde Excel</h1>
+      <p>Pega una tabla con fecha, precio esperado y saldo consumido. Se importarán solo filas con monto mayor que cero.</p>
+    </section>
+
+    @if (auth.error() || error()) {
+      <mat-card appearance="outlined" class="message error-card">
+        <mat-card-content>{{ auth.error() || error() }}</mat-card-content>
+      </mat-card>
+    }
+
+    @if (success()) {
+      <mat-card appearance="outlined" class="message success-card">
+        <mat-card-content>{{ success() }}</mat-card-content>
+      </mat-card>
+    }
+
+    <section class="content-grid">
+      <mat-card appearance="outlined">
+        <mat-card-header>
+          <mat-card-title>Datos de importación</mat-card-title>
+          <mat-card-subtitle>Mapeo a la pestaña Comidas</mat-card-subtitle>
+        </mat-card-header>
+
+        <mat-card-content>
+          @if (!auth.isSignedIn()) {
+            <p class="empty">Inicia sesión para cargar restaurantes y contribuidores.</p>
+          } @else if (loading()) {
+            <div class="loading-state">
+              <mat-spinner diameter="28"></mat-spinner>
+              <span>Cargando datos base...</span>
+            </div>
+          } @else {
+            <form class="import-form" [formGroup]="form" (ngSubmit)="importMeals()">
+              <mat-form-field appearance="outline">
+                <mat-label>Restaurante</mat-label>
+                <mat-select formControlName="restaurante_id">
+                  @for (restaurant of restaurants(); track restaurant.id) {
+                    <mat-option [value]="restaurant.id">{{ restaurant.nombre }}</mat-option>
+                  }
+                </mat-select>
+                @if (form.controls.restaurante_id.hasError('required')) {
+                  <mat-error>Selecciona un restaurante.</mat-error>
+                }
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Pagado por</mat-label>
+                <mat-select formControlName="pagado_por">
+                  @for (contributor of contributors(); track contributor.id) {
+                    <mat-option [value]="contributor.id">{{ contributor.nombre }}</mat-option>
+                  }
+                </mat-select>
+                @if (form.controls.pagado_por.hasError('required')) {
+                  <mat-error>Selecciona quién pagó.</mat-error>
+                }
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Descripción</mat-label>
+                <input matInput formControlName="descripcion" />
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Tabla pegada desde Excel</mat-label>
+                <textarea
+                  matInput
+                  rows="12"
+                  formControlName="rawData"
+                  placeholder="Fecha&#9;Precio&#9;Saldo consumido&#10;27/05/2025&#9;56000&#9;44800"
+                ></textarea>
+              </mat-form-field>
+
+              <button
+                mat-flat-button
+                color="primary"
+                type="submit"
+                [disabled]="saving() || previewRows().length === 0 || restaurants().length === 0 || contributors().length === 0"
+              >
+                {{ saving() ? 'Importando...' : 'Importar comidas' }}
+              </button>
+            </form>
+          }
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card appearance="outlined">
+        <mat-card-header>
+          <mat-card-title>Vista previa</mat-card-title>
+          <mat-card-subtitle>
+            {{ previewRows().length }} filas listas, {{ omittedCount() }} omitidas, total
+            {{ totalAmount() | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}
+          </mat-card-subtitle>
+        </mat-card-header>
+
+        <mat-card-content>
+          @if (previewRows().length > 0) {
+            <div class="table-wrap">
+              <table mat-table [dataSource]="pagedPreviewRows()">
+                <ng-container matColumnDef="fecha">
+                  <th mat-header-cell *matHeaderCellDef>Fecha</th>
+                  <td mat-cell *matCellDef="let row">{{ row.fecha }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="precio">
+                  <th mat-header-cell *matHeaderCellDef>Precio</th>
+                  <td mat-cell *matCellDef="let row">
+                    {{ row.precio | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}
+                  </td>
+                </ng-container>
+
+                <ng-container matColumnDef="monto">
+                  <th mat-header-cell *matHeaderCellDef>Monto</th>
+                  <td mat-cell *matCellDef="let row">
+                    {{ row.monto | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}
+                  </td>
+                </ng-container>
+
+                <ng-container matColumnDef="nota">
+                  <th mat-header-cell *matHeaderCellDef>Nota</th>
+                  <td mat-cell *matCellDef="let row">{{ row.nota }}</td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+              </table>
+            </div>
+            <mat-paginator
+              [length]="previewRows().length"
+              [pageIndex]="previewPaginationView().pageIndex"
+              [pageSize]="previewPaginationView().pageSize"
+              [pageSizeOptions]="pageSizeOptions"
+              showFirstLastButtons
+              (page)="updatePreviewPage($event)"
+              aria-label="Paginación de la vista previa de comidas"
+            ></mat-paginator>
+          } @else {
+            <p class="empty">No hay filas válidas para importar.</p>
+          }
+        </mat-card-content>
+      </mat-card>
+    </section>
+  </main>
+</app-shell>

@@ -1,0 +1,69 @@
+<app-shell title="Configuración" [lastReadAt]="lastLoadedAt()">
+  <main class="app-shell">
+  <section class="hero">
+    <p class="eyebrow">Configuración</p>
+    <h1>Ajustes de la app</h1>
+    <p>Consulta los valores generales leídos desde la pestaña <strong>Config</strong> de Google Sheets.</p>
+  </section>
+
+  @if (auth.error() || configError()) {
+    <mat-card appearance="outlined" class="error-card">
+      <mat-card-content>{{ auth.error() || configError() }}</mat-card-content>
+    </mat-card>
+  }
+
+  <section class="dashboard-grid">
+    <mat-card appearance="outlined" class="config-card">
+      <mat-card-header>
+        <mat-card-title>Configuración</mat-card-title>
+        <mat-card-subtitle>Datos leídos desde la pestaña Config</mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-actions align="end">
+        <button mat-stroked-button type="button" (click)="loadConfig()" [disabled]="!auth.isSignedIn() || loadingConfig()">
+          {{ loadingConfig() ? 'Leyendo...' : 'Actualizar' }}
+        </button>
+      </mat-card-actions>
+
+      <mat-card-content>
+        @if (!auth.isSignedIn()) {
+          <p class="empty">Inicia sesión para leer la hoja compartida.</p>
+        } @else if (loadingConfig()) {
+          <div class="loading-state">
+            <mat-spinner diameter="28"></mat-spinner>
+            <span>Leyendo Google Sheets...</span>
+          </div>
+        } @else if (configEntries().length > 0) {
+          <div class="table-wrap">
+            <table mat-table [dataSource]="pagedConfigEntries()">
+              <ng-container matColumnDef="clave">
+                <th mat-header-cell *matHeaderCellDef>Clave</th>
+                <td mat-cell *matCellDef="let entry">{{ entry.clave }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="valor">
+                <th mat-header-cell *matHeaderCellDef>Valor</th>
+                <td mat-cell *matCellDef="let entry">{{ entry.valor }}</td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+            </table>
+          </div>
+          <mat-paginator
+            [length]="configEntries().length"
+            [pageIndex]="configPaginationView().pageIndex"
+            [pageSize]="configPaginationView().pageSize"
+            [pageSizeOptions]="pageSizeOptions"
+            showFirstLastButtons
+            (page)="updateConfigPage($event)"
+            aria-label="Paginación de configuración"
+          ></mat-paginator>
+        } @else {
+          <p class="empty">No hay filas en la pestaña Config todavía.</p>
+        }
+      </mat-card-content>
+    </mat-card>
+  </section>
+</main>
+</app-shell>

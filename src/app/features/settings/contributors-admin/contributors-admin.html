@@ -1,0 +1,102 @@
+<app-shell title="Contribuidores">
+  <main class="app-shell">
+  <section class="hero">
+    <p class="eyebrow">Configuración</p>
+    <h1>Contribuidores</h1>
+    <p>Registra las personas que aportan dinero para que aparezcan en aportes y comidas.</p>
+  </section>
+
+  @if (auth.error() || error()) {
+    <mat-card appearance="outlined" class="message error-card">
+      <mat-card-content>{{ auth.error() || error() }}</mat-card-content>
+    </mat-card>
+  }
+
+  @if (success()) {
+    <mat-card appearance="outlined" class="message success-card">
+      <mat-card-content>{{ success() }}</mat-card-content>
+    </mat-card>
+  }
+
+  <section class="content-grid">
+    <mat-card appearance="outlined">
+      <mat-card-header>
+        <mat-card-title>Nuevo contribuidor</mat-card-title>
+        <mat-card-subtitle>Se agregará activo por defecto</mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        @if (!auth.isSignedIn()) {
+          <p class="empty">Inicia sesión para registrar contribuidores.</p>
+        } @else {
+          <form class="admin-form" [formGroup]="form" (ngSubmit)="saveContributor()">
+            <mat-form-field appearance="outline">
+              <mat-label>Nombre</mat-label>
+              <input matInput formControlName="nombre" />
+              @if (form.controls.nombre.hasError('required')) {
+                <mat-error>El nombre es obligatorio.</mat-error>
+              }
+            </mat-form-field>
+
+            <button mat-flat-button color="primary" type="submit" [disabled]="saving()">
+              {{ saving() ? 'Guardando...' : 'Guardar contribuidor' }}
+            </button>
+          </form>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card appearance="outlined">
+      <mat-card-header>
+        <mat-card-title>Lista de contribuidores</mat-card-title>
+        <mat-card-subtitle>Datos de la pestaña Contribuidores</mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-actions align="end">
+        <button mat-stroked-button type="button" (click)="loadData()" [disabled]="!auth.isSignedIn() || loading()">
+          {{ loading() ? 'Cargando...' : 'Actualizar' }}
+        </button>
+      </mat-card-actions>
+
+      <mat-card-content>
+        @if (!auth.isSignedIn()) {
+          <p class="empty">Inicia sesión para consultar la lista.</p>
+        } @else if (loading()) {
+          <div class="loading-state">
+            <mat-spinner diameter="28"></mat-spinner>
+            <span>Leyendo Google Sheets...</span>
+          </div>
+        } @else if (contributors().length > 0) {
+          <div class="table-wrap">
+            <table mat-table [dataSource]="pagedContributors()">
+              <ng-container matColumnDef="nombre">
+                <th mat-header-cell *matHeaderCellDef>Nombre</th>
+                <td mat-cell *matCellDef="let contributor">{{ contributor.nombre }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="activo">
+                <th mat-header-cell *matHeaderCellDef>Activo</th>
+                <td mat-cell *matCellDef="let contributor">{{ contributor.activo }}</td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+            </table>
+          </div>
+          <mat-paginator
+            [length]="contributors().length"
+            [pageIndex]="contributorsPaginationView().pageIndex"
+            [pageSize]="contributorsPaginationView().pageSize"
+            [pageSizeOptions]="pageSizeOptions"
+            showFirstLastButtons
+            (page)="updateContributorsPage($event)"
+            aria-label="Paginación de contribuidores"
+          ></mat-paginator>
+        } @else {
+          <p class="empty">No hay contribuidores registrados todavía.</p>
+        }
+      </mat-card-content>
+    </mat-card>
+  </section>
+</main>
+</app-shell>

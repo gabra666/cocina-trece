@@ -1,0 +1,137 @@
+:host {
+  display: block;
+  min-height: 100vh;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+}
+
+.layout {
+  min-height: 100vh;
+  background: #f7f8fb;
+}
+
+.sidenav {
+  width: 284px;
+  border-right: 1px solid #d9dee8;
+  background: #ffffff;
+}
+
+.sidenav::ng-deep .mat-drawer-inner-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 72px;
+  padding: 16px;
+}
+
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: #315f9f;
+  color: #fff;
+  font-weight: 700;
+}
+
+.brand strong,
+.brand span {
+  display: block;
+}
+
+.brand span {
+  color: #667085;
+  font-size: 0.84rem;
+}
+
+.active-link {
+  background: #eaf1ff;
+  color: #1f4f8f;
+}
+
+.sidenav-meta {
+  display: grid;
+  gap: 12px;
+  margin-top: auto;
+  padding: 16px;
+}
+
+.read-status {
+  display: grid;
+  gap: 4px;
+  padding-top: 12px;
+  border-top: 1px solid #e1e6ef;
+}
+
+.read-status span {
+  color: #667085;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.read-status strong {
+  color: #1f2937;
+  font-size: 0.92rem;
+}
+
+.top-bar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+.toolbar-title {
+  margin-left: 8px;
+  font-weight: 500;
+}
+
+.spacer {
+  flex: 1 1 auto;
+}
+
+.session-chip {
+  margin-right: 8px;
+}
+
+@media (max-width: 560px) {
+  .session-chip {
+    display: none;
+  }
+}
+
+@media (max-width: 860px) {
+  .sidenav a.mat-mdc-list-item {
+    --mdc-list-list-item-hover-state-layer-color: transparent;
+    --mdc-list-list-item-focus-state-layer-color: transparent;
+    --mdc-list-list-item-pressed-state-layer-color: transparent;
+  }
+
+  .sidenav a.mat-mdc-list-item:hover,
+  .sidenav a.mat-mdc-list-item:focus,
+  .sidenav a.mat-mdc-list-item:focus-visible {
+    background: transparent;
+  }
+
+  .sidenav a.active-link,
+  .sidenav a.active-link:hover,
+  .sidenav a.active-link:focus,
+  .sidenav a.active-link:focus-visible {
+    background: #eaf1ff;
+    color: #1f4f8f;
+  }
+}
+
+@media (min-width: 861px) {
+  .menu-button {
+    display: none;
+  }
+
+  .toolbar-title {
+    margin-left: 0;
+  }
+}

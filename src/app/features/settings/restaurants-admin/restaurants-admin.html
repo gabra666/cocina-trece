@@ -1,0 +1,112 @@
+<app-shell title="Restaurantes">
+  <main class="app-shell">
+  <section class="hero">
+    <p class="eyebrow">Configuración</p>
+    <h1>Restaurantes</h1>
+    <p>Registra restaurantes para seleccionarlos al guardar comidas y facilitar reportes futuros.</p>
+  </section>
+
+  @if (auth.error() || error()) {
+    <mat-card appearance="outlined" class="message error-card">
+      <mat-card-content>{{ auth.error() || error() }}</mat-card-content>
+    </mat-card>
+  }
+
+  @if (success()) {
+    <mat-card appearance="outlined" class="message success-card">
+      <mat-card-content>{{ success() }}</mat-card-content>
+    </mat-card>
+  }
+
+  <section class="content-grid">
+    <mat-card appearance="outlined">
+      <mat-card-header>
+        <mat-card-title>Nuevo restaurante</mat-card-title>
+        <mat-card-subtitle>Se agregará activo por defecto</mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        @if (!auth.isSignedIn()) {
+          <p class="empty">Inicia sesión para registrar restaurantes.</p>
+        } @else {
+          <form class="admin-form" [formGroup]="form" (ngSubmit)="saveRestaurant()">
+            <mat-form-field appearance="outline">
+              <mat-label>Nombre</mat-label>
+              <input matInput formControlName="nombre" />
+              @if (form.controls.nombre.hasError('required')) {
+                <mat-error>El nombre es obligatorio.</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Teléfono</mat-label>
+              <input matInput formControlName="telefono" />
+            </mat-form-field>
+
+            <button mat-flat-button color="primary" type="submit" [disabled]="saving()">
+              {{ saving() ? 'Guardando...' : 'Guardar restaurante' }}
+            </button>
+          </form>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card appearance="outlined">
+      <mat-card-header>
+        <mat-card-title>Lista de restaurantes</mat-card-title>
+        <mat-card-subtitle>Datos de la pestaña Restaurantes</mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-actions align="end">
+        <button mat-stroked-button type="button" (click)="loadData()" [disabled]="!auth.isSignedIn() || loading()">
+          {{ loading() ? 'Cargando...' : 'Actualizar' }}
+        </button>
+      </mat-card-actions>
+
+      <mat-card-content>
+        @if (!auth.isSignedIn()) {
+          <p class="empty">Inicia sesión para consultar la lista.</p>
+        } @else if (loading()) {
+          <div class="loading-state">
+            <mat-spinner diameter="28"></mat-spinner>
+            <span>Leyendo Google Sheets...</span>
+          </div>
+        } @else if (restaurants().length > 0) {
+          <div class="table-wrap">
+            <table mat-table [dataSource]="pagedRestaurants()">
+              <ng-container matColumnDef="nombre">
+                <th mat-header-cell *matHeaderCellDef>Nombre</th>
+                <td mat-cell *matCellDef="let restaurant">{{ restaurant.nombre }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="telefono">
+                <th mat-header-cell *matHeaderCellDef>Teléfono</th>
+                <td mat-cell *matCellDef="let restaurant">{{ restaurant.telefono || '-' }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="activo">
+                <th mat-header-cell *matHeaderCellDef>Activo</th>
+                <td mat-cell *matCellDef="let restaurant">{{ restaurant.activo }}</td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+            </table>
+          </div>
+          <mat-paginator
+            [length]="restaurants().length"
+            [pageIndex]="restaurantsPaginationView().pageIndex"
+            [pageSize]="restaurantsPaginationView().pageSize"
+            [pageSizeOptions]="pageSizeOptions"
+            showFirstLastButtons
+            (page)="updateRestaurantsPage($event)"
+            aria-label="Paginación de restaurantes"
+          ></mat-paginator>
+        } @else {
+          <p class="empty">No hay restaurantes registrados todavía.</p>
+        }
+      </mat-card-content>
+    </mat-card>
+  </section>
+</main>
+</app-shell>

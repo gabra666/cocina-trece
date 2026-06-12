@@ -1,0 +1,78 @@
+:host {
+  display: block;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+}
+
+.clock-panel {
+  display: block;
+}
+
+.clock-list {
+  display: grid;
+  gap: 14px;
+  margin-top: 16px;
+}
+
+header h2,
+header p,
+.clock-row {
+  margin: 0;
+}
+
+header h2 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+header p {
+  margin-top: 2px;
+  color: #667085;
+  font-size: 0.78rem;
+}
+
+.clock-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+h3,
+p {
+  margin: 0;
+}
+
+h3 {
+  font-size: 1rem;
+  letter-spacing: 0;
+}
+
+p,
+.time-block span {
+  color: #667085;
+  font-size: 0.84rem;
+}
+
+.time-block {
+  display: grid;
+  gap: 3px;
+  text-align: right;
+}
+
+.time-block strong {
+  font-size: 1.15rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+}
+
+@media (max-width: 460px) {
+  .clock-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .time-block {
+    text-align: left;
+  }
+}

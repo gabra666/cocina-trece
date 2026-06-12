@@ -1,0 +1,185 @@
+<app-shell title="Comidas">
+  <main class="app-shell">
+  <section class="hero">
+    <p class="eyebrow">Comidas</p>
+    <h1>Registrar comida</h1>
+    <p>Guarda compras de comida en Google Sheets y revisa el historial más reciente desde la misma pantalla.</p>
+  </section>
+
+  @if (auth.error() || error()) {
+    <mat-card appearance="outlined" class="message error-card">
+      <mat-card-content>{{ auth.error() || error() }}</mat-card-content>
+    </mat-card>
+  }
+
+  @if (success()) {
+    <mat-card appearance="outlined" class="message success-card">
+      <mat-card-content>{{ success() }}</mat-card-content>
+    </mat-card>
+  }
+
+  <section class="content-grid">
+    <mat-card appearance="outlined">
+      <mat-card-header>
+        <mat-card-title>Nueva comida</mat-card-title>
+        <mat-card-subtitle>Se agregará una fila a la pestaña Comidas</mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        @if (!auth.isSignedIn()) {
+          <p class="empty">Inicia sesión para registrar comidas.</p>
+        } @else if (loading()) {
+          <div class="loading-state">
+            <mat-spinner diameter="28"></mat-spinner>
+            <span>Cargando restaurantes y contribuidores...</span>
+          </div>
+        } @else {
+          <form class="meal-form" [formGroup]="form" (ngSubmit)="saveMeal()">
+            <mat-form-field appearance="outline">
+              <mat-label>Fecha</mat-label>
+              <input
+                matInput
+                [matDatepicker]="mealDatepicker"
+                formControlName="fecha"
+                (click)="mealDatepicker.open()"
+                (focus)="mealDatepicker.open()"
+              />
+              <mat-datepicker-toggle matIconSuffix [for]="mealDatepicker"></mat-datepicker-toggle>
+              <mat-datepicker #mealDatepicker></mat-datepicker>
+              @if (form.controls.fecha.hasError('required')) {
+                <mat-error>La fecha es obligatoria.</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Restaurante</mat-label>
+              <mat-select formControlName="restaurante_id">
+                @for (restaurant of restaurants(); track restaurant.id) {
+                  <mat-option [value]="restaurant.id">{{ restaurant.nombre }}</mat-option>
+                }
+              </mat-select>
+              @if (form.controls.restaurante_id.hasError('required')) {
+                <mat-error>Selecciona un restaurante.</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Descripción</mat-label>
+              <input matInput formControlName="descripcion" placeholder="Almuerzo, domicilio, cena..." />
+              @if (form.controls.descripcion.hasError('required')) {
+                <mat-error>La descripción es obligatoria.</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Monto</mat-label>
+              <input matInput type="number" min="1" inputmode="numeric" formControlName="monto" />
+              @if (form.controls.monto.hasError('required')) {
+                <mat-error>El monto es obligatorio.</mat-error>
+              }
+              @if (form.controls.monto.hasError('min')) {
+                <mat-error>El monto debe ser mayor que cero.</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Pagado por</mat-label>
+              <mat-select formControlName="pagado_por">
+                @for (contributor of contributors(); track contributor.id) {
+                  <mat-option [value]="contributor.id">{{ contributor.nombre }}</mat-option>
+                }
+              </mat-select>
+              @if (form.controls.pagado_por.hasError('required')) {
+                <mat-error>Selecciona quién pagó.</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Nota</mat-label>
+              <textarea matInput rows="3" formControlName="nota"></textarea>
+            </mat-form-field>
+
+            <button
+              mat-flat-button
+              color="primary"
+              type="submit"
+              [disabled]="saving() || restaurants().length === 0 || contributors().length === 0"
+            >
+              {{ saving() ? 'Guardando...' : 'Guardar comida' }}
+            </button>
+          </form>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card appearance="outlined">
+      <mat-card-header>
+        <mat-card-title>Historial de comidas</mat-card-title>
+        <mat-card-subtitle>Ordenado por fecha descendente</mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-actions align="end">
+        <button mat-stroked-button type="button" (click)="loadData()" [disabled]="!auth.isSignedIn() || loading()">
+          {{ loading() ? 'Cargando...' : 'Actualizar' }}
+        </button>
+      </mat-card-actions>
+
+      <mat-card-content>
+        @if (!auth.isSignedIn()) {
+          <p class="empty">Inicia sesión para consultar el historial.</p>
+        } @else if (loading()) {
+          <div class="loading-state">
+            <mat-spinner diameter="28"></mat-spinner>
+            <span>Leyendo Google Sheets...</span>
+          </div>
+        } @else if (meals().length > 0) {
+          <div class="table-wrap">
+            <table mat-table [dataSource]="pagedMeals()">
+              <ng-container matColumnDef="fecha">
+                <th mat-header-cell *matHeaderCellDef>Fecha</th>
+                <td mat-cell *matCellDef="let meal">{{ meal.fecha }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="restaurante">
+                <th mat-header-cell *matHeaderCellDef>Restaurante</th>
+                <td mat-cell *matCellDef="let meal">{{ getRestaurantName(meal.restaurante_id) }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="descripcion">
+                <th mat-header-cell *matHeaderCellDef>Descripción</th>
+                <td mat-cell *matCellDef="let meal">{{ meal.descripcion }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="monto">
+                <th mat-header-cell *matHeaderCellDef>Monto</th>
+                <td mat-cell *matCellDef="let meal">
+                  {{ meal.monto | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="pagado_por">
+                <th mat-header-cell *matHeaderCellDef>Pagado por</th>
+                <td mat-cell *matCellDef="let meal">{{ getContributorName(meal.pagado_por) }}</td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+            </table>
+          </div>
+          <mat-paginator
+            [length]="meals().length"
+            [pageIndex]="mealsPaginationView().pageIndex"
+            [pageSize]="mealsPaginationView().pageSize"
+            [pageSizeOptions]="pageSizeOptions"
+            showFirstLastButtons
+            (page)="updateMealsPage($event)"
+            aria-label="Paginación del historial de comidas"
+          ></mat-paginator>
+        } @else {
+          <p class="empty">No hay comidas registradas todavía.</p>
+        }
+      </mat-card-content>
+    </mat-card>
+  </section>
+</main>
+</app-shell>
