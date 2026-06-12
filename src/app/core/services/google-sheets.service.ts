@@ -27,14 +27,6 @@ export class GoogleSheetsService {
   }
 
   async appendRow(sheetName: string, row: string[]): Promise<void> {
-    await this.appendRows(sheetName, [row]);
-  }
-
-  async appendRows(sheetName: string, rows: string[][]): Promise<void> {
-    if (rows.length === 0) {
-      return;
-    }
-
     const token = this.requireAccessToken();
     const range = encodeURIComponent(`${sheetName}!A:Z`);
     const url = `${this.baseUrl}/values/${range}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
@@ -45,7 +37,7 @@ export class GoogleSheetsService {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ values: rows })
+      body: JSON.stringify({ values: [row] })
     });
 
     await this.ensureOk(response, `No se pudo guardar en ${sheetName}.`);

@@ -98,6 +98,11 @@ h1 {
   width: 100%;
 }
 
+.negative {
+  color: #b42318;
+  font-weight: 700;
+}
+
 .empty {
   margin: 18px 0 0;
   border: 1px dashed #c6ceda;

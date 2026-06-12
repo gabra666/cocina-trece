@@ -1,22 +1,20 @@
 import { Injectable, inject } from '@angular/core';
-import { Meal, MealPaymentType } from '../../shared/models/cocina.models';
+import { RestaurantRecharge } from '../../shared/models/cocina.models';
 import { GoogleSheetsService } from './google-sheets.service';
 
-export interface NewMeal {
+export interface NewRestaurantRecharge {
   fecha: string;
   restaurante_id: string;
-  descripcion: string;
   monto: number;
   nota?: string;
-  tipo_pago?: MealPaymentType;
 }
 
 @Injectable({ providedIn: 'root' })
-export class MealsService {
+export class RestaurantRechargesService {
   private readonly sheets = inject(GoogleSheetsService);
 
-  async getMeals(): Promise<Meal[]> {
-    const rows = await this.sheets.getRows<Meal>('Comidas');
+  async getRecharges(): Promise<RestaurantRecharge[]> {
+    const rows = await this.sheets.getRows<RestaurantRecharge>('RecargasRestaurantes');
 
     return rows
       .map((row) => ({
@@ -26,19 +24,14 @@ export class MealsService {
       .sort((first, second) => second.fecha.localeCompare(first.fecha));
   }
 
-  async addMeal(meal: NewMeal): Promise<void> {
-    await this.sheets.appendRow(
-      'Comidas',
-      [
-        this.createId(),
-        meal.fecha,
-        meal.restaurante_id,
-        meal.descripcion.trim(),
-        String(meal.monto),
-        meal.nota?.trim() ?? '',
-        meal.tipo_pago ?? 'presupuesto_general'
-      ]
-    );
+  async addRecharge(recharge: NewRestaurantRecharge): Promise<void> {
+    await this.sheets.appendRow('RecargasRestaurantes', [
+      this.createId(),
+      recharge.fecha,
+      recharge.restaurante_id,
+      String(recharge.monto),
+      recharge.nota?.trim() ?? ''
+    ]);
   }
 
   private createId(): string {

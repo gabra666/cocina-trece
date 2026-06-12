@@ -61,7 +61,16 @@ id | nombre | telefono | activo
 ### Comidas
 
 ```text
-id | fecha | restaurante_id | descripcion | monto | pagado_por | nota
+id | fecha | restaurante_id | descripcion | monto | nota | tipo_pago
+```
+
+`tipo_pago` can be `presupuesto_general` or `presupuesto_restaurante`.
+Existing rows without `tipo_pago` are treated as `presupuesto_general`.
+
+### RecargasRestaurantes
+
+```text
+id | fecha | restaurante_id | monto | nota
 ```
 
 ### Config
@@ -189,7 +198,15 @@ export interface Meal {
   restaurante_id?: string;
   descripcion: string;
   monto: number;
-  pagado_por?: string;
+  nota?: string;
+  tipo_pago?: 'presupuesto_general' | 'presupuesto_restaurante';
+}
+
+export interface RestaurantRecharge {
+  id: string;
+  fecha: string;
+  restaurante_id: string;
+  monto: number;
   nota?: string;
 }
 ```

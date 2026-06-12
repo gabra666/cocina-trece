@@ -19,14 +19,42 @@ export interface Restaurant {
   activo: boolean;
 }
 
+export type MealPaymentType = 'presupuesto_general' | 'presupuesto_restaurante';
+
 export interface Meal {
   id: string;
   fecha: string;
   restaurante_id?: string;
   descripcion: string;
   monto: number;
-  pagado_por?: string;
   nota?: string;
+  tipo_pago?: MealPaymentType;
+}
+
+export interface RestaurantRecharge {
+  id: string;
+  fecha: string;
+  restaurante_id: string;
+  monto: number;
+  nota?: string;
+}
+
+export interface RestaurantBalance {
+  restaurante_id: string;
+  restaurante_nombre: string;
+  recargado: number;
+  consumido: number;
+  saldo: number;
+  tiene_recargas: boolean;
+}
+
+export interface BudgetSnapshot {
+  total_aportes: number;
+  total_comidas_generales: number;
+  total_recargas_restaurantes: number;
+  saldo_general: number;
+  saldos_restaurantes: RestaurantBalance[];
+  recargas: RestaurantRecharge[];
 }
 
 export interface ConfigEntry {

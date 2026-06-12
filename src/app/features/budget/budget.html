@@ -1,0 +1,226 @@
+<app-shell title="Presupuesto">
+  <main class="app-shell">
+    <section class="hero">
+      <p class="eyebrow">Presupuesto</p>
+      <h1>Presupuesto familiar</h1>
+      <p>Controla el saldo general y las recargas hechas a restaurantes desde los aportes familiares.</p>
+    </section>
+
+    @if (auth.error() || error()) {
+      <mat-card appearance="outlined" class="message error-card">
+        <mat-card-content>{{ auth.error() || error() }}</mat-card-content>
+      </mat-card>
+    }
+
+    @if (success()) {
+      <mat-card appearance="outlined" class="message success-card">
+        <mat-card-content>{{ success() }}</mat-card-content>
+      </mat-card>
+    }
+
+    @if (!auth.isSignedIn()) {
+      <mat-card appearance="outlined">
+        <mat-card-content>
+          <p class="empty">Inicia sesión para consultar el presupuesto familiar.</p>
+        </mat-card-content>
+      </mat-card>
+    } @else if (loading()) {
+      <div class="loading-state">
+        <mat-spinner diameter="28"></mat-spinner>
+        <span>Leyendo Google Sheets...</span>
+      </div>
+    } @else {
+      <section class="summary-grid">
+        <div class="summary-item primary">
+          <span>Saldo general</span>
+          <strong>{{ snapshot()?.saldo_general ?? 0 | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</strong>
+        </div>
+        <div class="summary-item">
+          <span>Total aportado</span>
+          <strong>{{ snapshot()?.total_aportes ?? 0 | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</strong>
+        </div>
+        <div class="summary-item">
+          <span>Comidas directas</span>
+          <strong>{{ snapshot()?.total_comidas_generales ?? 0 | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</strong>
+        </div>
+        <div class="summary-item">
+          <span>Recargas</span>
+          <strong>{{ snapshot()?.total_recargas_restaurantes ?? 0 | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</strong>
+        </div>
+      </section>
+
+      <section class="content-grid">
+        <mat-card appearance="outlined">
+          <mat-card-header>
+            <mat-card-title>Nueva recarga</mat-card-title>
+            <mat-card-subtitle>Descuenta del saldo general y suma al restaurante</mat-card-subtitle>
+          </mat-card-header>
+
+          <mat-card-content>
+            <form class="budget-form" [formGroup]="form" (ngSubmit)="saveRecharge()">
+              <mat-form-field appearance="outline">
+                <mat-label>Fecha</mat-label>
+                <input
+                  matInput
+                  [matDatepicker]="rechargeDatepicker"
+                  formControlName="fecha"
+                  (click)="rechargeDatepicker.open()"
+                  (focus)="rechargeDatepicker.open()"
+                />
+                <mat-datepicker-toggle matIconSuffix [for]="rechargeDatepicker"></mat-datepicker-toggle>
+                <mat-datepicker #rechargeDatepicker></mat-datepicker>
+                @if (form.controls.fecha.hasError('required')) {
+                  <mat-error>La fecha es obligatoria.</mat-error>
+                }
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Restaurante</mat-label>
+                <mat-select formControlName="restaurante_id">
+                  @for (restaurant of restaurants(); track restaurant.id) {
+                    <mat-option [value]="restaurant.id">{{ restaurant.nombre }}</mat-option>
+                  }
+                </mat-select>
+                @if (form.controls.restaurante_id.hasError('required')) {
+                  <mat-error>Selecciona un restaurante.</mat-error>
+                }
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Monto</mat-label>
+                <input matInput type="number" min="1" inputmode="numeric" formControlName="monto" />
+                @if (form.controls.monto.hasError('required')) {
+                  <mat-error>El monto es obligatorio.</mat-error>
+                }
+                @if (form.controls.monto.hasError('min')) {
+                  <mat-error>El monto debe ser mayor que cero.</mat-error>
+                }
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Nota</mat-label>
+                <textarea matInput rows="3" formControlName="nota"></textarea>
+              </mat-form-field>
+
+              <button mat-flat-button color="primary" type="submit" [disabled]="saving() || restaurants().length === 0">
+                {{ saving() ? 'Guardando...' : 'Guardar recarga' }}
+              </button>
+            </form>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card appearance="outlined">
+          <mat-card-header>
+            <mat-card-title>Saldos por restaurante</mat-card-title>
+            <mat-card-subtitle>Recargas menos comidas pagadas desde el restaurante</mat-card-subtitle>
+          </mat-card-header>
+
+          <mat-card-actions align="end">
+            <button mat-stroked-button type="button" (click)="loadData()" [disabled]="loading()">
+              {{ loading() ? 'Cargando...' : 'Actualizar' }}
+            </button>
+          </mat-card-actions>
+
+          <mat-card-content>
+            @if (balances().length > 0) {
+              <div class="table-wrap">
+                <table mat-table [dataSource]="pagedBalances()">
+                  <ng-container matColumnDef="restaurante">
+                    <th mat-header-cell *matHeaderCellDef>Restaurante</th>
+                    <td mat-cell *matCellDef="let balance">{{ balance.restaurante_nombre }}</td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="recargado">
+                    <th mat-header-cell *matHeaderCellDef>Recargado</th>
+                    <td mat-cell *matCellDef="let balance">
+                      {{ balance.recargado | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}
+                    </td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="consumido">
+                    <th mat-header-cell *matHeaderCellDef>Consumido</th>
+                    <td mat-cell *matCellDef="let balance">
+                      {{ balance.consumido | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}
+                    </td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="saldo">
+                    <th mat-header-cell *matHeaderCellDef>Saldo</th>
+                    <td mat-cell *matCellDef="let balance" [class.negative]="balance.saldo < 0">
+                      {{ balance.saldo | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}
+                    </td>
+                  </ng-container>
+
+                  <tr mat-header-row *matHeaderRowDef="balanceColumns"></tr>
+                  <tr mat-row *matRowDef="let row; columns: balanceColumns"></tr>
+                </table>
+              </div>
+              <mat-paginator
+                [length]="balances().length"
+                [pageIndex]="balancesPaginationView().pageIndex"
+                [pageSize]="balancesPaginationView().pageSize"
+                [pageSizeOptions]="pageSizeOptions"
+                showFirstLastButtons
+                (page)="updateBalancesPage($event)"
+                aria-label="Paginación de saldos por restaurante"
+              ></mat-paginator>
+            } @else {
+              <p class="empty">No hay restaurantes para mostrar todavía.</p>
+            }
+          </mat-card-content>
+        </mat-card>
+      </section>
+
+      <mat-card appearance="outlined" class="history-card">
+        <mat-card-header>
+          <mat-card-title>Historial de recargas</mat-card-title>
+          <mat-card-subtitle>Movimientos registrados en RecargasRestaurantes</mat-card-subtitle>
+        </mat-card-header>
+
+        <mat-card-content>
+          @if (recharges().length > 0) {
+            <div class="table-wrap">
+              <table mat-table [dataSource]="pagedRecharges()">
+                <ng-container matColumnDef="fecha">
+                  <th mat-header-cell *matHeaderCellDef>Fecha</th>
+                  <td mat-cell *matCellDef="let recharge">{{ recharge.fecha }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="restaurante">
+                  <th mat-header-cell *matHeaderCellDef>Restaurante</th>
+                  <td mat-cell *matCellDef="let recharge">{{ getRestaurantName(recharge.restaurante_id) }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="monto">
+                  <th mat-header-cell *matHeaderCellDef>Monto</th>
+                  <td mat-cell *matCellDef="let recharge">
+                    {{ recharge.monto | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}
+                  </td>
+                </ng-container>
+
+                <ng-container matColumnDef="nota">
+                  <th mat-header-cell *matHeaderCellDef>Nota</th>
+                  <td mat-cell *matCellDef="let recharge">{{ recharge.nota || '-' }}</td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="rechargeColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: rechargeColumns"></tr>
+              </table>
+            </div>
+            <mat-paginator
+              [length]="recharges().length"
+              [pageIndex]="rechargesPaginationView().pageIndex"
+              [pageSize]="rechargesPaginationView().pageSize"
+              [pageSizeOptions]="pageSizeOptions"
+              showFirstLastButtons
+              (page)="updateRechargesPage($event)"
+              aria-label="Paginación de recargas"
+            ></mat-paginator>
+          } @else {
+            <p class="empty">No hay recargas registradas todavía.</p>
+          }
+        </mat-card-content>
+      </mat-card>
+    }
+  </main>
+</app-shell>

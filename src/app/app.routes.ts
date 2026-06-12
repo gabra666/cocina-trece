@@ -7,14 +7,14 @@ export const routes: Routes = [
       import('./features/meals/meals').then((m) => m.Meals)
   },
   {
-    path: 'comidas/importar',
-    loadComponent: () =>
-      import('./features/meals-import/meals-import').then((m) => m.MealsImport)
-  },
-  {
     path: 'aportes/nuevo',
     loadComponent: () =>
       import('./features/contributions/contributions').then((m) => m.Contributions)
+  },
+  {
+    path: 'presupuesto',
+    loadComponent: () =>
+      import('./features/budget/budget').then((m) => m.Budget)
   },
   {
     path: 'configuracion',

@@ -9,9 +9,10 @@ import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTableModule } from '@angular/material/table';
 import { AuthService } from '../../../core/services/auth.service';
+import { BudgetService } from '../../../core/services/budget.service';
 import { RestaurantsService } from '../../../core/services/restaurants.service';
 import { AppShell } from '../../../shared/components/app-shell/app-shell';
-import { Restaurant } from '../../../shared/models/cocina.models';
+import { BudgetSnapshot, Restaurant } from '../../../shared/models/cocina.models';
 import {
   DEFAULT_PAGINATION,
   PAGE_SIZE_OPTIONS,
@@ -39,15 +40,17 @@ import {
 })
 export class RestaurantsAdmin {
   protected readonly auth = inject(AuthService);
+  private readonly budgetService = inject(BudgetService);
   private readonly restaurantsService = inject(RestaurantsService);
   private lastLoadedToken: string | null = null;
 
   protected readonly restaurants = signal<Restaurant[]>([]);
+  protected readonly budgetSnapshot = signal<BudgetSnapshot | null>(null);
   protected readonly loading = signal(false);
   protected readonly saving = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly success = signal<string | null>(null);
-  protected readonly displayedColumns = ['nombre', 'telefono', 'activo'];
+  protected readonly displayedColumns = ['nombre', 'telefono', 'activo', 'saldo'];
   protected readonly pageSizeOptions = PAGE_SIZE_OPTIONS;
   protected readonly restaurantsPagination = signal<PaginationState>(DEFAULT_PAGINATION);
 
@@ -69,6 +72,10 @@ export class RestaurantsAdmin {
     return paginateRows(this.restaurants(), this.restaurantsPagination());
   });
 
+  protected readonly balanceByRestaurantId = computed(() => {
+    return new Map((this.budgetSnapshot()?.saldos_restaurantes ?? []).map((balance) => [balance.restaurante_id, balance.saldo]));
+  });
+
   constructor() {
     effect(() => {
       const token = this.auth.accessToken();
@@ -81,6 +88,7 @@ export class RestaurantsAdmin {
       if (!token) {
         this.lastLoadedToken = null;
         this.restaurants.set([]);
+        this.budgetSnapshot.set(null);
       }
     });
   }
@@ -104,7 +112,13 @@ export class RestaurantsAdmin {
     this.error.set(null);
 
     try {
-      this.restaurants.set(await this.restaurantsService.getRestaurants());
+      const [restaurants, budgetSnapshot] = await Promise.all([
+        this.restaurantsService.getRestaurants(),
+        this.budgetService.getSnapshot()
+      ]);
+
+      this.restaurants.set(restaurants);
+      this.budgetSnapshot.set(budgetSnapshot);
     } catch (error) {
       this.error.set(this.getErrorMessage(error));
     } finally {
@@ -141,6 +155,10 @@ export class RestaurantsAdmin {
       pageIndex: event.pageIndex,
       pageSize: event.pageSize
     });
+  }
+
+  protected getRestaurantBalance(restaurantId: string): number {
+    return this.balanceByRestaurantId().get(restaurantId) ?? 0;
   }
 
   private getErrorMessage(error: unknown): string {

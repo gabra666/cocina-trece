@@ -91,6 +91,50 @@ h1 {
   width: 100%;
 }
 
+.payment-mode {
+  display: grid;
+  gap: 8px;
+}
+
+.payment-mode span {
+  color: #475467;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.payment-mode mat-button-toggle-group {
+  width: 100%;
+}
+
+.payment-mode mat-button-toggle {
+  flex: 1 1 0;
+}
+
+.balance-preview {
+  border: 1px solid #d8dfeb;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 14px;
+}
+
+.balance-preview span,
+.balance-preview small {
+  display: block;
+  color: #667085;
+}
+
+.balance-preview strong {
+  display: block;
+  margin: 6px 0;
+  color: #205493;
+  font-size: 1.15rem;
+}
+
+.balance-preview.negative strong,
+.balance-preview.negative small {
+  color: #b42318;
+}
+
 .table-wrap {
   overflow-x: auto;
 }

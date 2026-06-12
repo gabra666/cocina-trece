@@ -42,6 +42,29 @@ export const environment = {
 
 No se debe usar client secret en Angular. La seguridad depende de Google OAuth, los orígenes autorizados y los permisos de la Google Sheet.
 
+## Publicación en GitHub Pages
+
+La app se publica con GitHub Actions en:
+
+```text
+https://gabra666.github.io/cocina-trece/
+```
+
+Antes de desplegar, configura estos repository secrets en GitHub:
+
+```text
+GOOGLE_CLIENT_ID
+GOOGLE_SPREADSHEET_ID
+```
+
+También agrega este origen autorizado en el OAuth Client de Google:
+
+```text
+https://gabra666.github.io
+```
+
+El workflow usa `npm run build:github-pages`, compila con `--base-href /cocina-trece/` y copia `index.html` como `404.html` para soportar rutas directas de Angular.
+
 ## MVP
 
 La primera versión se mantendrá simple:
@@ -52,9 +75,10 @@ La primera versión se mantendrá simple:
 - Google Login para autenticar a las personas de la familia.
 - Google Sheets como base de datos compartida.
 - Lectura y escritura de aportes y comidas.
-- Registro de comidas con restaurante, descripción, monto y pagador.
-- Importación de comidas pegadas desde Excel.
+- Registro de comidas con restaurante, descripción, monto y origen de pago.
 - Registro de aportes con formulario Material.
+- Presupuesto general alimentado por aportes familiares.
+- Recargas a restaurantes desde el presupuesto general.
 - Administración simple de contribuidores y restaurantes.
 - Dashboard mensual básico.
 - Reloj familiar para Canarias, Cali y Estocolmo.
