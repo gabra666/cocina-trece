@@ -1,16 +1,20 @@
 :host {
   display: block;
-  min-height: 100vh;
+  min-height: 100svh;
   font-family: Roboto, "Helvetica Neue", sans-serif;
 }
 
 .layout {
-  min-height: 100vh;
+  min-height: 100svh;
   background: #f7f8fb;
+  max-width: 100%;
+  overflow-x: hidden;
+  overscroll-behavior-x: none;
 }
 
 .sidenav {
   width: 284px;
+  max-width: calc(100vw - 48px);
   border-right: 1px solid #d9dee8;
   background: #ffffff;
 }
@@ -80,11 +84,22 @@
   position: sticky;
   top: 0;
   z-index: 5;
+  min-height: 56px;
+}
+
+mat-sidenav-content {
+  min-width: 0;
+  overflow-x: hidden;
+  overscroll-behavior-x: none;
 }
 
 .toolbar-title {
   margin-left: 8px;
   font-weight: 500;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .spacer {

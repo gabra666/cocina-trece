@@ -1,6 +1,6 @@
 :host {
   display: block;
-  min-height: 100vh;
+  min-height: 100svh;
   background: #f7f8fb;
   color: #1f2937;
 }
@@ -22,8 +22,11 @@
 
 .app-shell {
   width: min(1120px, calc(100% - 32px));
+  max-width: 100%;
   margin: 0 auto;
   padding: 36px 0;
+  overflow-x: hidden;
+  overscroll-behavior-x: none;
 }
 
 .hero {
@@ -76,8 +79,24 @@ h1 {
 
 .content-grid {
   display: grid;
-  grid-template-columns: 420px minmax(0, 1fr);
+  grid-template-columns: minmax(0, 420px) minmax(0, 1fr);
   gap: 18px;
+  align-items: start;
+  max-width: 100%;
+  overflow-x: hidden;
+  overscroll-behavior-x: none;
+}
+
+.content-grid > mat-card,
+.meal-form,
+mat-form-field {
+  min-width: 0;
+  width: 100%;
+}
+
+.content-grid > mat-card {
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .meal-form {
@@ -108,6 +127,13 @@ h1 {
 
 .payment-mode mat-button-toggle {
   flex: 1 1 0;
+  min-width: 0;
+}
+
+.payment-mode ::ng-deep .mat-button-toggle-label-content {
+  line-height: 1.25;
+  padding: 0 10px;
+  white-space: normal;
 }
 
 .balance-preview {
@@ -136,7 +162,14 @@ h1 {
 }
 
 .table-wrap {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
   overflow-x: auto;
+  contain: inline-size;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .mat-mdc-table {
@@ -168,7 +201,22 @@ h1 {
 @media (max-width: 780px) {
   .app-shell {
     width: min(100% - 24px, 1120px);
-    padding: 24px 0;
+    padding: 18px 0;
+  }
+
+  .hero {
+    margin-bottom: 18px;
+  }
+
+  h1 {
+    margin-bottom: 8px;
+    font-size: 2rem;
+    line-height: 1.08;
+  }
+
+  .hero p {
+    font-size: 0.95rem;
+    line-height: 1.5;
   }
 
   .top-bar {
@@ -177,5 +225,21 @@ h1 {
 
   .top-bar mat-chip-set {
     display: none;
+  }
+
+  .payment-mode mat-button-toggle-group {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .table-wrap .mat-mdc-table {
+    min-width: 640px;
+  }
+}
+
+@media (max-width: 420px) {
+  .app-shell {
+    width: 100%;
+    padding: 16px 10px;
   }
 }
