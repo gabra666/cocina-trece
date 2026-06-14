@@ -1,7 +1,7 @@
 <div class="chart-frame">
-  @if (hasData) {
-    <canvas #canvas></canvas>
-  } @else {
+  <canvas #canvas [class.hidden]="!hasData"></canvas>
+
+  @if (!hasData) {
     <div class="empty-chart">{{ emptyMessage }}</div>
   }
 </div>

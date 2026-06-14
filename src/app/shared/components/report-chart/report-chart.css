@@ -15,6 +15,10 @@ canvas {
   height: 280px;
 }
 
+canvas.hidden {
+  display: none;
+}
+
 .empty-chart {
   display: grid;
   min-height: 280px;
