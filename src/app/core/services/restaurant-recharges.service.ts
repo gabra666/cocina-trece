@@ -9,6 +9,10 @@ export interface NewRestaurantRecharge {
   nota?: string;
 }
 
+export interface UpdateRestaurantRecharge extends NewRestaurantRecharge {
+  id: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class RestaurantRechargesService {
   private readonly sheets = inject(GoogleSheetsService);
@@ -32,6 +36,34 @@ export class RestaurantRechargesService {
       String(recharge.monto),
       recharge.nota?.trim() ?? ''
     ]);
+  }
+
+  async updateRecharge(recharge: UpdateRestaurantRecharge): Promise<void> {
+    const row = await this.findRechargeRow(recharge.id);
+
+    await this.sheets.updateRow('RecargasRestaurantes', row.rowNumber, [
+      recharge.id,
+      recharge.fecha,
+      recharge.restaurante_id,
+      String(recharge.monto),
+      recharge.nota?.trim() ?? ''
+    ]);
+  }
+
+  async deleteRecharge(id: string): Promise<void> {
+    const row = await this.findRechargeRow(id);
+    await this.sheets.deleteRow('RecargasRestaurantes', row.rowNumber);
+  }
+
+  private async findRechargeRow(id: string) {
+    const rows = await this.sheets.getRowsWithMetadata<RestaurantRecharge>('RecargasRestaurantes');
+    const row = rows.find((entry) => entry.value.id === id);
+
+    if (!row) {
+      throw new Error('No se encontrÃ³ la recarga en la hoja.');
+    }
+
+    return row;
   }
 
   private createId(): string {

@@ -61,3 +61,20 @@ export interface ConfigEntry {
   clave: string;
   valor: string;
 }
+
+export interface ClockZone {
+  label: string;
+  city: string;
+  timeZone: string;
+}
+
+export interface AppSettings {
+  nombreApp: string;
+  moneda: string;
+  pais: string;
+  idioma: string;
+  descripcionComidaDefault: string;
+  montoAporteDefault: number;
+  restauranteDefaultId: string;
+  zonasHorarias: ClockZone[];
+}

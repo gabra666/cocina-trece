@@ -9,7 +9,7 @@
     <div class="brand">
       <img class="brand-mark" src="brand-mark.png" alt="" width="42" height="42" />
       <div>
-        <strong>Cocina Trece</strong>
+        <strong>{{ config.settings().nombreApp }}</strong>
         <span>Familia y presupuesto</span>
       </div>
     </div>
@@ -31,11 +31,6 @@
 
     <div class="sidenav-meta">
       <app-world-clock />
-
-      <div class="read-status">
-        <span>Última lectura</span>
-        <strong>{{ lastReadAt ? (lastReadAt | date: 'short') : 'Sin lectura' }}</strong>
-      </div>
     </div>
   </mat-sidenav>
 

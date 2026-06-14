@@ -62,24 +62,6 @@
   padding: 16px;
 }
 
-.read-status {
-  display: grid;
-  gap: 4px;
-  padding-top: 12px;
-  border-top: 1px solid #e1e6ef;
-}
-
-.read-status span {
-  color: #667085;
-  font-size: 0.78rem;
-  font-weight: 700;
-}
-
-.read-status strong {
-  color: #1f2937;
-  font-size: 0.92rem;
-}
-
 .top-bar {
   position: sticky;
   top: 0;

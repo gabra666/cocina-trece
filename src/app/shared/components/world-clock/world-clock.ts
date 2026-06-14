@@ -1,12 +1,7 @@
-import { Component, OnDestroy, signal } from '@angular/core';
+import { Component, OnDestroy, computed, inject, signal } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { MatDividerModule } from '@angular/material/divider';
-
-interface ClockZone {
-  label: string;
-  city: string;
-  timeZone: string;
-}
+import { ConfigService } from '../../../core/services/config.service';
 
 @Component({
   selector: 'app-world-clock',
@@ -15,24 +10,10 @@ interface ClockZone {
   styleUrl: './world-clock.css'
 })
 export class WorldClock implements OnDestroy {
+  private readonly config = inject(ConfigService);
+
   protected readonly now = signal(new Date());
-  protected readonly zones: ClockZone[] = [
-    {
-      label: 'Canarias',
-      city: 'Islas Canarias',
-      timeZone: 'Atlantic/Canary'
-    },
-    {
-      label: 'Cali',
-      city: 'Colombia',
-      timeZone: 'America/Bogota'
-    },
-    {
-      label: 'Estocolmo',
-      city: 'Suecia',
-      timeZone: 'Europe/Stockholm'
-    }
-  ];
+  protected readonly zones = computed(() => this.config.settings().zonasHorarias);
 
   private readonly intervalId = window.setInterval(() => {
     this.now.set(new Date());
@@ -43,7 +24,7 @@ export class WorldClock implements OnDestroy {
   }
 
   protected formatTime(timeZone: string): string {
-    return new Intl.DateTimeFormat('es-CO', {
+    return new Intl.DateTimeFormat(this.config.settings().idioma, {
       timeZone,
       hour: '2-digit',
       minute: '2-digit',
@@ -52,7 +33,7 @@ export class WorldClock implements OnDestroy {
   }
 
   protected formatDate(timeZone: string): string {
-    return new Intl.DateTimeFormat('es-CO', {
+    return new Intl.DateTimeFormat(this.config.settings().idioma, {
       timeZone,
       weekday: 'short',
       day: '2-digit',

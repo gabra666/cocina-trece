@@ -3,7 +3,7 @@
   <section class="hero">
     <p class="eyebrow">Aportes</p>
     <h1>Registrar aporte familiar</h1>
-    <p>Guarda nuevos aportes en Google Sheets y revisa el historial más reciente desde la misma pantalla.</p>
+    <p>Registra los ingresos familiares que alimentan el presupuesto general de la casa.</p>
   </section>
 
   @if (auth.error() || error()) {
@@ -21,8 +21,10 @@
   <section class="content-grid">
     <mat-card appearance="outlined">
       <mat-card-header>
-        <mat-card-title>Nuevo aporte</mat-card-title>
-        <mat-card-subtitle>Se agregará una fila a la pestaña Aportes</mat-card-subtitle>
+        <mat-card-title>{{ isEditing() ? 'Editar aporte' : 'Nuevo aporte' }}</mat-card-title>
+        <mat-card-subtitle>
+          {{ isEditing() ? 'Corrige el aporte seleccionado' : 'Selecciona contribuidor, fecha y monto aportado' }}
+        </mat-card-subtitle>
       </mat-card-header>
 
       <mat-card-content>
@@ -54,7 +56,7 @@
             <mat-form-field appearance="outline">
               <mat-label>Contribuidor</mat-label>
               <mat-select formControlName="contribuidor_id">
-                @for (contributor of contributors(); track contributor.id) {
+                @for (contributor of selectableContributors(); track contributor.id) {
                   <mat-option [value]="contributor.id">{{ contributor.nombre }}</mat-option>
                 }
               </mat-select>
@@ -79,9 +81,18 @@
               <textarea matInput rows="3" formControlName="nota"></textarea>
             </mat-form-field>
 
-            <button mat-flat-button color="primary" type="submit" [disabled]="saving() || contributors().length === 0">
-              {{ saving() ? 'Guardando...' : 'Guardar aporte' }}
+            <button
+              mat-flat-button
+              color="primary"
+              type="submit"
+              [disabled]="saving() || activeContributors().length === 0"
+            >
+              {{ saving() ? 'Guardando...' : isEditing() ? 'Guardar cambios' : 'Guardar aporte' }}
             </button>
+
+            @if (isEditing()) {
+              <button mat-stroked-button type="button" (click)="cancelEdit()" [disabled]="saving()">Cancelar</button>
+            }
           </form>
         }
       </mat-card-content>
@@ -105,7 +116,7 @@
         } @else if (loading()) {
           <div class="loading-state">
             <mat-spinner diameter="28"></mat-spinner>
-            <span>Leyendo Google Sheets...</span>
+            <span>Cargando historial de aportes...</span>
           </div>
         } @else if (contributions().length > 0) {
           <div class="table-wrap">
@@ -125,13 +136,40 @@
               <ng-container matColumnDef="monto">
                 <th mat-header-cell *matHeaderCellDef>Monto</th>
                 <td mat-cell *matCellDef="let contribution">
-                  {{ contribution.monto | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}
+                  {{ contribution.monto | currency: currencyCode() : 'symbol-narrow' : '1.0-0' }}
                 </td>
               </ng-container>
 
               <ng-container matColumnDef="nota">
                 <th mat-header-cell *matHeaderCellDef>Nota</th>
                 <td mat-cell *matCellDef="let contribution">{{ contribution.nota || '-' }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="acciones">
+                <th mat-header-cell *matHeaderCellDef>Acciones</th>
+                <td mat-cell *matCellDef="let contribution">
+                  <div class="row-actions">
+                    <button
+                      mat-icon-button
+                      type="button"
+                      aria-label="Editar aporte"
+                      (click)="editContribution(contribution)"
+                      [disabled]="saving()"
+                    >
+                      <mat-icon>edit</mat-icon>
+                    </button>
+                    <button
+                      mat-icon-button
+                      color="warn"
+                      type="button"
+                      aria-label="Eliminar aporte"
+                      (click)="deleteContribution(contribution)"
+                      [disabled]="saving()"
+                    >
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </div>
+                </td>
               </ng-container>
 
               <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>

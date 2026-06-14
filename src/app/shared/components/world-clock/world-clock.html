@@ -1,11 +1,11 @@
 <section class="clock-panel" aria-label="Reloj familiar">
   <header>
     <h2>Reloj familiar</h2>
-    <p>Canarias, Cali y Estocolmo</p>
+    <p>{{ zones().length }} zonas horarias</p>
   </header>
 
   <div class="clock-list">
-    @for (zone of zones; track zone.timeZone; let last = $last) {
+    @for (zone of zones(); track zone.timeZone; let last = $last) {
       <article class="clock-row">
         <div>
           <h3>{{ zone.label }}</h3>

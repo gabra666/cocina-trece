@@ -4,14 +4,18 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MAT_DIALOG_DATA, MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
+import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
 import { BudgetService } from '../../core/services/budget.service';
+import { ConfigService } from '../../core/services/config.service';
 import { RestaurantRechargesService } from '../../core/services/restaurant-recharges.service';
 import { RestaurantsService } from '../../core/services/restaurants.service';
 import { AppShell } from '../../shared/components/app-shell/app-shell';
@@ -24,6 +28,34 @@ import {
   paginateRows
 } from '../../shared/utils/pagination';
 
+interface DeleteRechargeDialogData {
+  restaurantName: string;
+  amount: number;
+  date: string;
+  currencyCode: string;
+}
+
+@Component({
+  selector: 'app-delete-recharge-dialog',
+  imports: [CommonModule, MatButtonModule, MatDialogModule],
+  template: `
+    <h2 mat-dialog-title>Eliminar recarga</h2>
+    <mat-dialog-content>
+      <p>
+        Se eliminara permanentemente la recarga de {{ data.restaurantName }} del {{ data.date }} por
+        {{ data.amount | currency: data.currencyCode : 'symbol-narrow' : '1.0-0' }}.
+      </p>
+    </mat-dialog-content>
+    <mat-dialog-actions align="end">
+      <button mat-button type="button" [mat-dialog-close]="false">Cancelar</button>
+      <button mat-flat-button color="warn" type="button" [mat-dialog-close]="true">Eliminar</button>
+    </mat-dialog-actions>
+  `
+})
+class DeleteRechargeDialog {
+  protected readonly data = inject<DeleteRechargeDialogData>(MAT_DIALOG_DATA);
+}
+
 @Component({
   selector: 'app-budget',
   imports: [
@@ -32,7 +64,9 @@ import {
     MatButtonModule,
     MatCardModule,
     MatDatepickerModule,
+    MatDialogModule,
     MatFormFieldModule,
+    MatIconModule,
     MatInputModule,
     MatPaginatorModule,
     MatProgressSpinnerModule,
@@ -46,11 +80,15 @@ import {
 export class Budget {
   protected readonly auth = inject(AuthService);
   private readonly budgetService = inject(BudgetService);
+  protected readonly config = inject(ConfigService);
+  private readonly dialog = inject(MatDialog);
   private readonly rechargesService = inject(RestaurantRechargesService);
   private readonly restaurantsService = inject(RestaurantsService);
   private lastLoadedToken: string | null = null;
 
   protected readonly restaurants = signal<Restaurant[]>([]);
+  protected readonly activeRestaurants = signal<Restaurant[]>([]);
+  protected readonly editingRecharge = signal<RestaurantRecharge | null>(null);
   protected readonly snapshot = signal<BudgetSnapshot | null>(null);
   protected readonly loading = signal(false);
   protected readonly saving = signal(false);
@@ -58,7 +96,7 @@ export class Budget {
   protected readonly success = signal<string | null>(null);
   protected readonly pageSizeOptions = PAGE_SIZE_OPTIONS;
   protected readonly balanceColumns = ['restaurante', 'recargado', 'consumido', 'saldo'];
-  protected readonly rechargeColumns = ['fecha', 'restaurante', 'monto', 'nota'];
+  protected readonly rechargeColumns = ['fecha', 'restaurante', 'monto', 'nota', 'acciones'];
   protected readonly balancesPagination = signal<PaginationState>(DEFAULT_PAGINATION);
   protected readonly rechargesPagination = signal<PaginationState>(DEFAULT_PAGINATION);
 
@@ -80,6 +118,21 @@ export class Budget {
 
   protected readonly restaurantNameById = computed(() => {
     return new Map((this.snapshot()?.saldos_restaurantes ?? []).map((balance) => [balance.restaurante_id, balance.restaurante_nombre]));
+  });
+
+  protected readonly currencyCode = computed(() => this.config.currencyCode());
+
+  protected readonly isEditing = computed(() => Boolean(this.editingRecharge()));
+
+  protected readonly selectableRestaurants = computed(() => {
+    const currentRestaurantId = this.editingRecharge()?.restaurante_id;
+
+    if (!currentRestaurantId || this.activeRestaurants().some((restaurant) => restaurant.id === currentRestaurantId)) {
+      return this.activeRestaurants();
+    }
+
+    const currentRestaurant = this.restaurants().find((restaurant) => restaurant.id === currentRestaurantId);
+    return currentRestaurant ? [...this.activeRestaurants(), currentRestaurant] : this.activeRestaurants();
   });
 
   protected readonly balances = computed<RestaurantBalance[]>(() => {
@@ -118,7 +171,9 @@ export class Budget {
       if (!token) {
         this.lastLoadedToken = null;
         this.restaurants.set([]);
+        this.activeRestaurants.set([]);
         this.snapshot.set(null);
+        this.resetForm();
       }
     });
   }
@@ -138,17 +193,17 @@ export class Budget {
     this.error.set(null);
 
     try {
-      const [restaurants, snapshot] = await Promise.all([
-        this.restaurantsService.getActiveRestaurants(),
+      const [, restaurants, snapshot] = await Promise.all([
+        this.config.loadSettings(),
+        this.restaurantsService.getRestaurants(),
         this.budgetService.getSnapshot()
       ]);
+      const activeRestaurants = restaurants.filter((restaurant) => restaurant.activo);
 
       this.restaurants.set(restaurants);
+      this.activeRestaurants.set(activeRestaurants);
       this.snapshot.set(snapshot);
-
-      if (!this.form.controls.restaurante_id.value && restaurants.length > 0) {
-        this.form.controls.restaurante_id.setValue(restaurants[0].id);
-      }
+      this.syncSelectedRestaurant(activeRestaurants);
     } catch (error) {
       this.error.set(this.getErrorMessage(error));
     } finally {
@@ -167,7 +222,8 @@ export class Budget {
 
     const value = this.form.getRawValue();
     const amount = Number(value.monto);
-    const availableBalance = this.snapshot()?.saldo_general ?? 0;
+    const currentRecharge = this.editingRecharge();
+    const availableBalance = this.getAvailableGeneralBalance(currentRecharge);
 
     if (amount > availableBalance) {
       this.error.set('El saldo general no alcanza para esta recarga.');
@@ -177,17 +233,84 @@ export class Budget {
     this.saving.set(true);
 
     try {
-      await this.rechargesService.addRecharge({
-        fecha: this.formatDate(value.fecha),
-        restaurante_id: value.restaurante_id,
-        monto: amount,
-        nota: value.nota
-      });
+      if (currentRecharge) {
+        await this.rechargesService.updateRecharge({
+          id: currentRecharge.id,
+          fecha: this.formatDate(value.fecha),
+          restaurante_id: value.restaurante_id,
+          monto: amount,
+          nota: value.nota
+        });
+        this.success.set('Recarga actualizada.');
+      } else {
+        await this.rechargesService.addRecharge({
+          fecha: this.formatDate(value.fecha),
+          restaurante_id: value.restaurante_id,
+          monto: amount,
+          nota: value.nota
+        });
+        this.success.set('Recarga guardada.');
+      }
 
-      this.form.controls.fecha.setValue(new Date());
-      this.form.controls.monto.reset(null);
-      this.form.controls.nota.setValue('');
-      this.success.set('Recarga guardada.');
+      this.resetForm();
+      await this.loadData();
+    } catch (error) {
+      this.error.set(this.getErrorMessage(error));
+    } finally {
+      this.saving.set(false);
+    }
+  }
+
+  protected editRecharge(recharge: RestaurantRecharge): void {
+    this.error.set(null);
+    this.success.set(null);
+    this.editingRecharge.set(recharge);
+    this.form.reset({
+      fecha: this.parseDate(recharge.fecha),
+      restaurante_id: recharge.restaurante_id,
+      monto: recharge.monto,
+      nota: recharge.nota ?? ''
+    });
+  }
+
+  protected cancelEdit(): void {
+    this.error.set(null);
+    this.resetForm();
+    this.syncSelectedRestaurant(this.activeRestaurants());
+  }
+
+  protected async deleteRecharge(recharge: RestaurantRecharge): Promise<void> {
+    this.error.set(null);
+    this.success.set(null);
+
+    const confirmed = await firstValueFrom(
+      this.dialog
+        .open(DeleteRechargeDialog, {
+          data: {
+            restaurantName: this.getRestaurantName(recharge.restaurante_id),
+            amount: recharge.monto,
+            date: recharge.fecha,
+            currencyCode: this.currencyCode()
+          },
+          width: 'min(440px, calc(100vw - 32px))'
+        })
+        .afterClosed()
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    this.saving.set(true);
+
+    try {
+      await this.rechargesService.deleteRecharge(recharge.id);
+      this.success.set('Recarga eliminada.');
+
+      if (this.editingRecharge()?.id === recharge.id) {
+        this.resetForm();
+      }
+
       await this.loadData();
     } catch (error) {
       this.error.set(this.getErrorMessage(error));
@@ -214,6 +337,33 @@ export class Budget {
     });
   }
 
+  private syncSelectedRestaurant(activeRestaurants: Restaurant[]): void {
+    if (this.editingRecharge()) {
+      return;
+    }
+
+    const selectedRestaurantId = this.form.controls.restaurante_id.value;
+
+    if (activeRestaurants.length === 0) {
+      this.form.controls.restaurante_id.setValue('');
+    } else if (
+      !selectedRestaurantId ||
+      !activeRestaurants.some((restaurant) => restaurant.id === selectedRestaurantId)
+    ) {
+      this.form.controls.restaurante_id.setValue(activeRestaurants[0].id);
+    }
+  }
+
+  private resetForm(): void {
+    this.editingRecharge.set(null);
+    this.form.reset({
+      fecha: new Date(),
+      restaurante_id: '',
+      monto: null,
+      nota: ''
+    });
+  }
+
   private formatDate(date: Date | null): string {
     if (!date) {
       return '';
@@ -224,6 +374,24 @@ export class Budget {
     const day = `${date.getDate()}`.padStart(2, '0');
 
     return `${year}-${month}-${day}`;
+  }
+
+  private parseDate(value: string): Date | null {
+    if (!value) {
+      return null;
+    }
+
+    const [year, month, day] = value.split('-').map(Number);
+
+    if (!year || !month || !day) {
+      return null;
+    }
+
+    return new Date(year, month - 1, day);
+  }
+
+  private getAvailableGeneralBalance(currentRecharge: RestaurantRecharge | null): number {
+    return (this.snapshot()?.saldo_general ?? 0) + (currentRecharge?.monto ?? 0);
   }
 
   private getErrorMessage(error: unknown): string {

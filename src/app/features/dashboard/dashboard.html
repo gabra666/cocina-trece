@@ -1,9 +1,9 @@
-<app-shell title="Configuración" [lastReadAt]="lastLoadedAt()">
+<app-shell title="Configuración">
   <main class="app-shell">
   <section class="hero">
     <p class="eyebrow">Configuración</p>
     <h1>Ajustes de la app</h1>
-    <p>Consulta los valores generales leídos desde la pestaña <strong>Config</strong> de Google Sheets.</p>
+    <p>Revisa los valores que personalizan la experiencia familiar: nombre, moneda, defaults y reloj.</p>
   </section>
 
   @if (auth.error() || configError()) {
@@ -16,7 +16,7 @@
     <mat-card appearance="outlined" class="config-card">
       <mat-card-header>
         <mat-card-title>Configuración</mat-card-title>
-        <mat-card-subtitle>Datos leídos desde la pestaña Config</mat-card-subtitle>
+        <mat-card-subtitle>Valores activos que personalizan formularios, moneda y reloj familiar</mat-card-subtitle>
       </mat-card-header>
 
       <mat-card-actions align="end">
@@ -31,9 +31,51 @@
         } @else if (loadingConfig()) {
           <div class="loading-state">
             <mat-spinner diameter="28"></mat-spinner>
-            <span>Leyendo Google Sheets...</span>
+            <span>Cargando ajustes...</span>
           </div>
-        } @else if (configEntries().length > 0) {
+        } @else if (knownSettingsRows().length > 0) {
+          <div class="table-wrap">
+            <table mat-table [dataSource]="knownSettingsRows()">
+              <ng-container matColumnDef="ajuste">
+                <th mat-header-cell *matHeaderCellDef>Ajuste</th>
+                <td mat-cell *matCellDef="let entry">{{ entry.label }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="clave">
+                <th mat-header-cell *matHeaderCellDef>Clave</th>
+                <td mat-cell *matCellDef="let entry">{{ entry.clave }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="valor">
+                <th mat-header-cell *matHeaderCellDef>Valor</th>
+                <td mat-cell *matCellDef="let entry">{{ entry.valor }}</td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="settingsColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: settingsColumns"></tr>
+            </table>
+          </div>
+        } @else {
+          <p class="empty">No hay ajustes para mostrar todavía.</p>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card appearance="outlined" class="config-card">
+      <mat-card-header>
+        <mat-card-title>Claves adicionales</mat-card-title>
+        <mat-card-subtitle>Ideas o valores guardados para futuras mejoras</mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        @if (!auth.isSignedIn()) {
+          <p class="empty">Inicia sesión para leer la hoja compartida.</p>
+        } @else if (loadingConfig()) {
+          <div class="loading-state">
+            <mat-spinner diameter="28"></mat-spinner>
+            <span>Cargando claves adicionales...</span>
+          </div>
+        } @else if (extraConfigEntries().length > 0) {
           <div class="table-wrap">
             <table mat-table [dataSource]="pagedConfigEntries()">
               <ng-container matColumnDef="clave">
@@ -51,7 +93,7 @@
             </table>
           </div>
           <mat-paginator
-            [length]="configEntries().length"
+            [length]="extraConfigEntries().length"
             [pageIndex]="configPaginationView().pageIndex"
             [pageSize]="configPaginationView().pageSize"
             [pageSizeOptions]="pageSizeOptions"
@@ -60,7 +102,7 @@
             aria-label="Paginación de configuración"
           ></mat-paginator>
         } @else {
-          <p class="empty">No hay filas en la pestaña Config todavía.</p>
+          <p class="empty">No hay claves adicionales.</p>
         }
       </mat-card-content>
     </mat-card>

@@ -146,6 +146,13 @@ mat-form-field {
   min-width: 640px;
 }
 
+.row-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+  white-space: nowrap;
+}
+
 .negative {
   color: #b42318;
   font-weight: 700;

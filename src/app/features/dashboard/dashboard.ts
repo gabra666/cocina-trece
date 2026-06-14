@@ -6,7 +6,7 @@ import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTableModule } from '@angular/material/table';
 import { AuthService } from '../../core/services/auth.service';
-import { GoogleSheetsService } from '../../core/services/google-sheets.service';
+import { ConfigService, DEFAULT_APP_SETTINGS } from '../../core/services/config.service';
 import { AppShell } from '../../shared/components/app-shell/app-shell';
 import { ConfigEntry } from '../../shared/models/cocina.models';
 import {
@@ -33,23 +33,47 @@ import {
 })
 export class Dashboard {
   protected readonly auth = inject(AuthService);
-  private readonly sheets = inject(GoogleSheetsService);
+  protected readonly config = inject(ConfigService);
   private lastLoadedToken: string | null = null;
+  private readonly knownConfigLabels = new Map([
+    ['nombre_app', 'Nombre de la app'],
+    ['moneda', 'Moneda'],
+    ['pais', 'País'],
+    ['idioma', 'Idioma'],
+    ['descripcion_comida_default', 'Descripción de comida'],
+    ['monto_aporte_default', 'Monto de aporte'],
+    ['restaurante_default_id', 'Restaurante por defecto'],
+    ['zonas_horarias', 'Zonas horarias']
+  ]);
 
-  protected readonly configEntries = signal<ConfigEntry[]>([]);
   protected readonly loadingConfig = signal(false);
   protected readonly configError = signal<string | null>(null);
-  protected readonly lastLoadedAt = signal<Date | null>(null);
   protected readonly displayedColumns = ['clave', 'valor'];
+  protected readonly settingsColumns = ['ajuste', 'clave', 'valor'];
   protected readonly pageSizeOptions = PAGE_SIZE_OPTIONS;
   protected readonly configPagination = signal<PaginationState>(DEFAULT_PAGINATION);
 
+  protected readonly knownSettingsRows = computed(() => {
+    const entries = new Map(this.config.entries().map((entry) => [entry.clave, entry.valor]));
+    const settings = this.config.settings();
+
+    return Array.from(this.knownConfigLabels.entries()).map(([clave, label]) => ({
+      clave,
+      label,
+      valor: entries.get(clave) || this.getDefaultDisplayValue(clave, settings.zonasHorarias.map((zone) => `${zone.label}=${zone.timeZone}`).join(';'))
+    }));
+  });
+
+  protected readonly extraConfigEntries = computed<ConfigEntry[]>(() => {
+    return this.config.entries().filter((entry) => !this.knownConfigLabels.has(entry.clave));
+  });
+
   protected readonly configPaginationView = computed(() => {
-    return normalizePagination(this.configPagination(), this.configEntries().length);
+    return normalizePagination(this.configPagination(), this.extraConfigEntries().length);
   });
 
   protected readonly pagedConfigEntries = computed(() => {
-    return paginateRows(this.configEntries(), this.configPagination());
+    return paginateRows(this.extraConfigEntries(), this.configPagination());
   });
 
   constructor() {
@@ -63,8 +87,7 @@ export class Dashboard {
 
       if (!token) {
         this.lastLoadedToken = null;
-        this.configEntries.set([]);
-        this.lastLoadedAt.set(null);
+        this.config.reset();
       }
     });
   }
@@ -88,13 +111,35 @@ export class Dashboard {
     this.configError.set(null);
 
     try {
-      const rows = await this.sheets.getRows<ConfigEntry>('Config');
-      this.configEntries.set(rows);
-      this.lastLoadedAt.set(new Date());
+      await this.config.loadSettings(true);
+      this.configError.set(this.config.error());
     } catch (error) {
       this.configError.set(this.getErrorMessage(error));
     } finally {
       this.loadingConfig.set(false);
+    }
+  }
+
+  private getDefaultDisplayValue(clave: string, zonesValue: string): string {
+    switch (clave) {
+      case 'nombre_app':
+        return DEFAULT_APP_SETTINGS.nombreApp;
+      case 'moneda':
+        return DEFAULT_APP_SETTINGS.moneda;
+      case 'pais':
+        return DEFAULT_APP_SETTINGS.pais;
+      case 'idioma':
+        return DEFAULT_APP_SETTINGS.idioma;
+      case 'descripcion_comida_default':
+        return DEFAULT_APP_SETTINGS.descripcionComidaDefault;
+      case 'monto_aporte_default':
+        return String(DEFAULT_APP_SETTINGS.montoAporteDefault);
+      case 'restaurante_default_id':
+        return DEFAULT_APP_SETTINGS.restauranteDefaultId || '-';
+      case 'zonas_horarias':
+        return zonesValue;
+      default:
+        return '-';
     }
   }
 

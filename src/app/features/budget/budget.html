@@ -33,27 +33,33 @@
       <section class="summary-grid">
         <div class="summary-item primary">
           <span>Saldo general</span>
-          <strong>{{ snapshot()?.saldo_general ?? 0 | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</strong>
+          <strong>{{ snapshot()?.saldo_general ?? 0 | currency: currencyCode() : 'symbol-narrow' : '1.0-0' }}</strong>
         </div>
         <div class="summary-item">
           <span>Total aportado</span>
-          <strong>{{ snapshot()?.total_aportes ?? 0 | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</strong>
+          <strong>{{ snapshot()?.total_aportes ?? 0 | currency: currencyCode() : 'symbol-narrow' : '1.0-0' }}</strong>
         </div>
         <div class="summary-item">
           <span>Comidas directas</span>
-          <strong>{{ snapshot()?.total_comidas_generales ?? 0 | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</strong>
+          <strong>
+            {{ snapshot()?.total_comidas_generales ?? 0 | currency: currencyCode() : 'symbol-narrow' : '1.0-0' }}
+          </strong>
         </div>
         <div class="summary-item">
           <span>Recargas</span>
-          <strong>{{ snapshot()?.total_recargas_restaurantes ?? 0 | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</strong>
+          <strong>
+            {{ snapshot()?.total_recargas_restaurantes ?? 0 | currency: currencyCode() : 'symbol-narrow' : '1.0-0' }}
+          </strong>
         </div>
       </section>
 
       <section class="content-grid">
         <mat-card appearance="outlined">
           <mat-card-header>
-            <mat-card-title>Nueva recarga</mat-card-title>
-            <mat-card-subtitle>Descuenta del saldo general y suma al restaurante</mat-card-subtitle>
+            <mat-card-title>{{ isEditing() ? 'Editar recarga' : 'Nueva recarga' }}</mat-card-title>
+            <mat-card-subtitle>
+              {{ isEditing() ? 'Actualiza la recarga registrada' : 'Descuenta del saldo general y suma al restaurante' }}
+            </mat-card-subtitle>
           </mat-card-header>
 
           <mat-card-content>
@@ -77,7 +83,7 @@
               <mat-form-field appearance="outline">
                 <mat-label>Restaurante</mat-label>
                 <mat-select formControlName="restaurante_id">
-                  @for (restaurant of restaurants(); track restaurant.id) {
+                  @for (restaurant of selectableRestaurants(); track restaurant.id) {
                     <mat-option [value]="restaurant.id">{{ restaurant.nombre }}</mat-option>
                   }
                 </mat-select>
@@ -102,9 +108,20 @@
                 <textarea matInput rows="3" formControlName="nota"></textarea>
               </mat-form-field>
 
-              <button mat-flat-button color="primary" type="submit" [disabled]="saving() || restaurants().length === 0">
-                {{ saving() ? 'Guardando...' : 'Guardar recarga' }}
+              <button
+                mat-flat-button
+                color="primary"
+                type="submit"
+                [disabled]="saving() || selectableRestaurants().length === 0"
+              >
+                {{ saving() ? 'Guardando...' : isEditing() ? 'Guardar cambios' : 'Guardar recarga' }}
               </button>
+
+              @if (isEditing()) {
+                <button mat-stroked-button type="button" (click)="cancelEdit()" [disabled]="saving()">
+                  Cancelar
+                </button>
+              }
             </form>
           </mat-card-content>
         </mat-card>
@@ -133,21 +150,21 @@
                   <ng-container matColumnDef="recargado">
                     <th mat-header-cell *matHeaderCellDef>Recargado</th>
                     <td mat-cell *matCellDef="let balance">
-                      {{ balance.recargado | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}
+                      {{ balance.recargado | currency: currencyCode() : 'symbol-narrow' : '1.0-0' }}
                     </td>
                   </ng-container>
 
                   <ng-container matColumnDef="consumido">
                     <th mat-header-cell *matHeaderCellDef>Consumido</th>
                     <td mat-cell *matCellDef="let balance">
-                      {{ balance.consumido | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}
+                      {{ balance.consumido | currency: currencyCode() : 'symbol-narrow' : '1.0-0' }}
                     </td>
                   </ng-container>
 
                   <ng-container matColumnDef="saldo">
                     <th mat-header-cell *matHeaderCellDef>Saldo</th>
                     <td mat-cell *matCellDef="let balance" [class.negative]="balance.saldo < 0">
-                      {{ balance.saldo | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}
+                      {{ balance.saldo | currency: currencyCode() : 'symbol-narrow' : '1.0-0' }}
                     </td>
                   </ng-container>
 
@@ -194,13 +211,40 @@
                 <ng-container matColumnDef="monto">
                   <th mat-header-cell *matHeaderCellDef>Monto</th>
                   <td mat-cell *matCellDef="let recharge">
-                    {{ recharge.monto | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}
+                    {{ recharge.monto | currency: currencyCode() : 'symbol-narrow' : '1.0-0' }}
                   </td>
                 </ng-container>
 
                 <ng-container matColumnDef="nota">
                   <th mat-header-cell *matHeaderCellDef>Nota</th>
                   <td mat-cell *matCellDef="let recharge">{{ recharge.nota || '-' }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="acciones">
+                  <th mat-header-cell *matHeaderCellDef>Acciones</th>
+                  <td mat-cell *matCellDef="let recharge">
+                    <div class="row-actions">
+                      <button
+                        mat-icon-button
+                        type="button"
+                        aria-label="Editar recarga"
+                        (click)="editRecharge(recharge)"
+                        [disabled]="saving()"
+                      >
+                        <mat-icon>edit</mat-icon>
+                      </button>
+                      <button
+                        mat-icon-button
+                        color="warn"
+                        type="button"
+                        aria-label="Eliminar recarga"
+                        (click)="deleteRecharge(recharge)"
+                        [disabled]="saving()"
+                      >
+                        <mat-icon>delete</mat-icon>
+                      </button>
+                    </div>
+                  </td>
                 </ng-container>
 
                 <tr mat-header-row *matHeaderRowDef="rechargeColumns"></tr>
