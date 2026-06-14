@@ -1,0 +1,7 @@
+<div class="chart-frame">
+  @if (hasData) {
+    <canvas #canvas></canvas>
+  } @else {
+    <div class="empty-chart">{{ emptyMessage }}</div>
+  }
+</div>
