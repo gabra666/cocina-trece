@@ -6,7 +6,6 @@ import {
   Input,
   OnChanges,
   OnDestroy,
-  SimpleChanges,
   ViewChild
 } from '@angular/core';
 import { Chart, ChartConfiguration, ChartDataset, ChartType, registerables } from 'chart.js';
@@ -30,6 +29,7 @@ export class ReportChart implements AfterViewInit, OnChanges, OnDestroy {
   @ViewChild('canvas') private readonly canvas?: ElementRef<HTMLCanvasElement>;
 
   private chart: Chart | null = null;
+  private renderFrame: number | null = null;
   private viewReady = false;
 
   get hasData(): boolean {
@@ -40,15 +40,35 @@ export class ReportChart implements AfterViewInit, OnChanges, OnDestroy {
 
   ngAfterViewInit(): void {
     this.viewReady = true;
-    this.renderChart();
+    this.scheduleRender();
   }
 
-  ngOnChanges(_changes: SimpleChanges): void {
-    this.renderChart();
+  ngOnChanges(): void {
+    this.scheduleRender();
   }
 
   ngOnDestroy(): void {
+    if (this.renderFrame !== null) {
+      cancelAnimationFrame(this.renderFrame);
+      this.renderFrame = null;
+    }
+
     this.destroyChart();
+  }
+
+  private scheduleRender(): void {
+    if (!this.viewReady) {
+      return;
+    }
+
+    if (this.renderFrame !== null) {
+      cancelAnimationFrame(this.renderFrame);
+    }
+
+    this.renderFrame = requestAnimationFrame(() => {
+      this.renderFrame = null;
+      this.renderChart();
+    });
   }
 
   private renderChart(): void {
