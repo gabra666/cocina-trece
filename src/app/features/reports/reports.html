@@ -113,19 +113,19 @@
 
       <section class="balance-breakdown" aria-label="Desglose del saldo final">
         <div>
-          <span>Banco / balance general</span>
+          <span>Saldo en banco</span>
           <strong [class.negative]="report().balance.endingGeneralBalance < 0">
             {{ report().balance.endingGeneralBalance | currency: currencyCode() : 'symbol-narrow' : '1.0-0' }}
           </strong>
         </div>
         <div>
-          <span>Restaurantes prepagados</span>
+          <span>Saldo prepagado en restaurantes</span>
           <strong [class.negative]="report().balance.endingRestaurantBalance < 0">
             {{ report().balance.endingRestaurantBalance | currency: currencyCode() : 'symbol-narrow' : '1.0-0' }}
           </strong>
         </div>
         <div class="total">
-          <span>Saldo final total</span>
+          <span>Saldo final</span>
           <strong [class.negative]="report().balance.endingBalance < 0">
             {{ report().balance.endingBalance | currency: currencyCode() : 'symbol-narrow' : '1.0-0' }}
           </strong>

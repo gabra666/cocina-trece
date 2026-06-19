@@ -74,6 +74,10 @@ select {
   min-width: 560px;
 }
 
+.editor-card {
+  scroll-margin-top: 72px;
+}
+
 .material-symbols-outlined {
   font-family: "Material Symbols Outlined";
   font-weight: normal;

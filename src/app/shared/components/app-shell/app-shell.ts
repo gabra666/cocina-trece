@@ -43,7 +43,7 @@ export class AppShell implements OnDestroy {
   protected readonly navItems: NavItem[] = [
     { label: 'Comidas', route: '/comidas/nueva', icon: 'restaurant' },
     { label: 'Aportes', route: '/aportes/nuevo', icon: 'payments' },
-    { label: 'Presupuesto', route: '/presupuesto', icon: 'account_balance_wallet' },
+    { label: 'Saldos', route: '/presupuesto', icon: 'account_balance_wallet' },
     { label: 'Reportes', route: '/reportes', icon: 'bar_chart' },
     { label: 'Contribuidores', route: '/configuracion/contribuidores', icon: 'group' },
     { label: 'Restaurantes', route: '/configuracion/restaurantes', icon: 'storefront' },

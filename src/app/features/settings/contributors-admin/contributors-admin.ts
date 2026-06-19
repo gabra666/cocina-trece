@@ -23,6 +23,7 @@ import {
   normalizePagination,
   paginateRows
 } from '../../../shared/utils/pagination';
+import { scrollToElement } from '../../../shared/utils/scroll-to-element';
 
 interface DeactivateContributorDialogData {
   contributorName: string;
@@ -190,6 +191,7 @@ export class ContributorsAdmin {
       nombre: contributor.nombre,
       activo: contributor.activo
     });
+    scrollToElement('contributor-editor');
   }
 
   protected cancelEdit(): void {

@@ -3,7 +3,7 @@
   <section class="hero">
     <p class="eyebrow">Aportes</p>
     <h1>Registrar aporte familiar</h1>
-    <p>Registra los ingresos familiares que alimentan el presupuesto general de la casa.</p>
+    <p>Registra los ingresos familiares que aumentan el saldo disponible en el banco.</p>
   </section>
 
   @if (auth.error() || error()) {
@@ -19,7 +19,7 @@
   }
 
   <section class="content-grid">
-    <mat-card appearance="outlined">
+    <mat-card id="contribution-editor" class="editor-card" appearance="outlined">
       <mat-card-header>
         <mat-card-title>{{ isEditing() ? 'Editar aporte' : 'Nuevo aporte' }}</mat-card-title>
         <mat-card-subtitle>
@@ -119,6 +119,13 @@
             <span>Cargando historial de aportes...</span>
           </div>
         } @else if (contributions().length > 0) {
+          <div class="history-total">
+            <span>Total aportado</span>
+            <strong>
+              {{ totalContributions() | currency: currencyCode() : 'symbol-narrow' : '1.0-0' }}
+            </strong>
+          </div>
+
           <div class="table-wrap">
             <table mat-table [dataSource]="pagedContributions()">
               <ng-container matColumnDef="fecha">

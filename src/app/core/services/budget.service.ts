@@ -65,12 +65,14 @@ export class BudgetService {
         };
       })
       .sort((first, second) => first.restaurante_nombre.localeCompare(second.restaurante_nombre));
+    const bankBalance = totalContributions - totalGeneralMeals - totalRestaurantRecharges;
+    const restaurantBalance = balances.reduce((total, balance) => total + balance.saldo, 0);
 
     return {
-      total_aportes: totalContributions,
-      total_comidas_generales: totalGeneralMeals,
       total_recargas_restaurantes: totalRestaurantRecharges,
-      saldo_general: totalContributions - totalGeneralMeals - totalRestaurantRecharges,
+      saldo_banco: bankBalance,
+      saldo_restaurantes: restaurantBalance,
+      saldo_final: bankBalance + restaurantBalance,
       saldos_restaurantes: balances,
       recargas: recharges
     };

@@ -1,9 +1,11 @@
-<app-shell title="Presupuesto">
+<app-shell title="Saldos">
   <main class="app-shell">
     <section class="hero">
-      <p class="eyebrow">Presupuesto</p>
-      <h1>Presupuesto familiar</h1>
-      <p>Controla el saldo general y las recargas hechas a restaurantes desde los aportes familiares.</p>
+      <p class="eyebrow">Saldos</p>
+      <h1>Saldos familiares</h1>
+      <p>
+        Consulta cuánto dinero queda en el banco y en restaurantes, y registra recargas para trasladar saldo entre ambos.
+      </p>
     </section>
 
     @if (auth.error() || error()) {
@@ -21,7 +23,7 @@
     @if (!auth.isSignedIn()) {
       <mat-card appearance="outlined">
         <mat-card-content>
-          <p class="empty">Inicia sesión para consultar el presupuesto familiar.</p>
+          <p class="empty">Inicia sesión para consultar los saldos familiares.</p>
         </mat-card-content>
       </mat-card>
     } @else if (loading()) {
@@ -30,19 +32,33 @@
         <span>Leyendo Google Sheets...</span>
       </div>
     } @else {
-      <section class="summary-grid">
-        <div class="summary-item primary">
-          <span>Saldo general</span>
-          <strong>{{ snapshot()?.saldo_general ?? 0 | currency: currencyCode() : 'symbol-narrow' : '1.0-0' }}</strong>
+      <section class="balance-breakdown" aria-label="Desglose del saldo">
+        <div>
+          <span>Saldo en banco</span>
+          <strong [class.negative]="(snapshot()?.saldo_banco ?? 0) < 0">
+            {{ snapshot()?.saldo_banco ?? 0 | currency: currencyCode() : 'symbol-narrow' : '1.0-0' }}
+          </strong>
+        </div>
+        <div>
+          <span>Saldo prepagado en restaurantes</span>
+          <strong [class.negative]="(snapshot()?.saldo_restaurantes ?? 0) < 0">
+            {{ snapshot()?.saldo_restaurantes ?? 0 | currency: currencyCode() : 'symbol-narrow' : '1.0-0' }}
+          </strong>
+        </div>
+        <div class="total">
+          <span>Saldo final</span>
+          <strong [class.negative]="(snapshot()?.saldo_final ?? 0) < 0">
+            {{ snapshot()?.saldo_final ?? 0 | currency: currencyCode() : 'symbol-narrow' : '1.0-0' }}
+          </strong>
         </div>
       </section>
 
       <section class="content-grid">
-        <mat-card appearance="outlined">
+        <mat-card id="recharge-editor" class="editor-card" appearance="outlined">
           <mat-card-header>
             <mat-card-title>{{ isEditing() ? 'Editar recarga' : 'Nueva recarga' }}</mat-card-title>
             <mat-card-subtitle>
-              {{ isEditing() ? 'Actualiza la recarga registrada' : 'Descuenta del saldo general y suma al restaurante' }}
+              {{ isEditing() ? 'Actualiza la recarga registrada' : 'Traslada saldo del banco al restaurante' }}
             </mat-card-subtitle>
           </mat-card-header>
 
@@ -123,29 +139,6 @@
           </mat-card-actions>
 
           <mat-card-content>
-            <div class="table-summary" aria-label="Resumen del presupuesto">
-              <div>
-                <span>Total aportado</span>
-                <strong>
-                  {{ snapshot()?.total_aportes ?? 0 | currency: currencyCode() : 'symbol-narrow' : '1.0-0' }}
-                </strong>
-              </div>
-              <div>
-                <span>Comidas directas</span>
-                <strong>
-                  {{ snapshot()?.total_comidas_generales ?? 0 | currency: currencyCode() : 'symbol-narrow' : '1.0-0' }}
-                </strong>
-              </div>
-              <div>
-                <span>Recargas</span>
-                <strong>
-                  {{
-                    snapshot()?.total_recargas_restaurantes ?? 0 | currency: currencyCode() : 'symbol-narrow' : '1.0-0'
-                  }}
-                </strong>
-              </div>
-            </div>
-
             @if (balances().length > 0) {
               <div class="table-wrap">
                 <table mat-table [dataSource]="pagedBalances()">
@@ -202,6 +195,15 @@
         </mat-card-header>
 
         <mat-card-content>
+          <div class="history-total">
+            <span>Total recargas</span>
+            <strong>
+              {{
+                snapshot()?.total_recargas_restaurantes ?? 0 | currency: currencyCode() : 'symbol-narrow' : '1.0-0'
+              }}
+            </strong>
+          </div>
+
           @if (recharges().length > 0) {
             <div class="table-wrap">
               <table mat-table [dataSource]="pagedRecharges()">

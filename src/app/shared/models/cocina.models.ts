@@ -49,10 +49,10 @@ export interface RestaurantBalance {
 }
 
 export interface BudgetSnapshot {
-  total_aportes: number;
-  total_comidas_generales: number;
   total_recargas_restaurantes: number;
-  saldo_general: number;
+  saldo_banco: number;
+  saldo_restaurantes: number;
+  saldo_final: number;
   saldos_restaurantes: RestaurantBalance[];
   recargas: RestaurantRecharge[];
 }

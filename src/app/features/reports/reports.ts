@@ -222,7 +222,7 @@ export class Reports {
       tension: 0.32
     },
     {
-      label: 'Restaurantes prepagados',
+      label: 'Saldo prepagado en restaurantes',
       data: this.report().trend.map((point) => point.endingRestaurantBalance),
       borderColor: '#b54708',
       backgroundColor: 'rgba(181, 71, 8, 0.08)',

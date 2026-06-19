@@ -29,6 +29,7 @@ import {
   normalizePagination,
   paginateRows
 } from '../../shared/utils/pagination';
+import { scrollToElement } from '../../shared/utils/scroll-to-element';
 
 interface DeleteMealDialogData {
   restaurantName: string;
@@ -170,14 +171,14 @@ export class Meals {
 
   protected readonly affectedBalanceLabel = computed(() => {
     return this.selectedPaymentType() === 'presupuesto_restaurante'
-      ? `Saldo ${this.selectedRestaurantBalance()?.restaurante_nombre ?? 'restaurante'}`
-      : 'Saldo general';
+      ? `Saldo prepagado en ${this.selectedRestaurantBalance()?.restaurante_nombre ?? 'restaurante'}`
+      : 'Saldo en banco';
   });
 
   protected readonly currentAffectedBalance = computed(() => {
     return this.selectedPaymentType() === 'presupuesto_restaurante'
       ? this.selectedRestaurantBalance()?.saldo ?? 0
-      : this.budgetSnapshot()?.saldo_general ?? 0;
+      : this.budgetSnapshot()?.saldo_banco ?? 0;
   });
 
   protected readonly projectedAffectedBalance = computed(() => {
@@ -308,7 +309,7 @@ export class Meals {
     const currentMeal = this.editingMeal();
 
     if (value.tipo_pago === 'presupuesto_general' && amount > this.getAvailableGeneralBalance(currentMeal)) {
-      this.error.set('El saldo general no alcanza para guardar esta comida.');
+      this.error.set('El saldo en banco no alcanza para guardar esta comida.');
       return;
     }
 
@@ -360,6 +361,7 @@ export class Meals {
       tipo_pago: this.getNormalizedPaymentType(meal),
       nota: meal.nota ?? ''
     });
+    scrollToElement('meal-editor');
   }
 
   protected cancelEdit(): void {
@@ -414,7 +416,7 @@ export class Meals {
   }
 
   protected getPaymentTypeLabel(meal: Meal): string {
-    return meal.tipo_pago === 'presupuesto_restaurante' ? 'Presupuesto restaurante' : 'Presupuesto general';
+    return meal.tipo_pago === 'presupuesto_restaurante' ? 'Saldo prepagado' : 'Saldo en banco';
   }
 
   protected updateMealsPage(event: PageEvent): void {
@@ -493,7 +495,7 @@ export class Meals {
   }
 
   private getAvailableGeneralBalance(currentMeal: Meal | null): number {
-    const currentBalance = this.budgetSnapshot()?.saldo_general ?? 0;
+    const currentBalance = this.budgetSnapshot()?.saldo_banco ?? 0;
     const originalAmount = currentMeal && this.getNormalizedPaymentType(currentMeal) === 'presupuesto_general'
       ? currentMeal.monto
       : 0;

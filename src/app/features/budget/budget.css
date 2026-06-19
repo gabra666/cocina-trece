@@ -59,42 +59,46 @@ h1 {
   color: #207344;
 }
 
-.summary-grid {
+.balance-breakdown {
   display: grid;
-  grid-template-columns: minmax(0, 280px);
-  gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
   margin-bottom: 18px;
-}
-
-.summary-item {
-  min-width: 0;
+  overflow: hidden;
   border: 1px solid #d8dfeb;
   border-radius: 8px;
   background: #ffffff;
-  padding: 16px;
 }
 
-.summary-item span {
+.balance-breakdown > div {
+  min-width: 0;
+  padding: 14px 16px;
+}
+
+.balance-breakdown > div + div {
+  border-left: 1px solid #e4e9f2;
+}
+
+.balance-breakdown span {
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   color: #667085;
-  font-size: 0.82rem;
+  font-size: 0.78rem;
 }
 
-.summary-item strong {
+.balance-breakdown strong {
   display: block;
   color: #1f2937;
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   line-height: 1.2;
   overflow-wrap: anywhere;
 }
 
-.summary-item.primary {
-  border-color: #97b7e5;
-  background: #edf5ff;
+.balance-breakdown .total {
+  background: #f6f9ff;
 }
 
-.summary-item.primary strong {
+.balance-breakdown .total strong {
   color: #205493;
 }
 
@@ -132,39 +136,26 @@ mat-form-field {
   margin-top: 18px;
 }
 
-.table-summary {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1px;
+.history-total {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
   margin-bottom: 16px;
-  overflow: hidden;
   border: 1px solid #e1e6ef;
   border-radius: 8px;
-  background: #e1e6ef;
-}
-
-.table-summary > div {
-  min-width: 0;
   background: #f8fafc;
   padding: 10px 12px;
 }
 
-.table-summary span,
-.table-summary strong {
-  display: block;
-}
-
-.table-summary span {
-  margin-bottom: 3px;
+.history-total span {
   color: #667085;
-  font-size: 0.72rem;
+  font-size: 0.78rem;
 }
 
-.table-summary strong {
+.history-total strong {
   color: #344054;
   font-size: 0.95rem;
   line-height: 1.25;
-  overflow-wrap: anywhere;
 }
 
 .table-wrap {
@@ -210,8 +201,14 @@ mat-form-field {
 }
 
 @media (max-width: 900px) {
+  .balance-breakdown,
   .content-grid {
     grid-template-columns: 1fr;
+  }
+
+  .balance-breakdown > div + div {
+    border-top: 1px solid #e4e9f2;
+    border-left: 0;
   }
 }
 
@@ -236,9 +233,6 @@ mat-form-field {
     line-height: 1.5;
   }
 
-  .summary-grid {
-    grid-template-columns: 1fr;
-  }
 }
 
 @media (max-width: 420px) {
@@ -247,7 +241,4 @@ mat-form-field {
     padding: 16px 10px;
   }
 
-  .table-summary {
-    grid-template-columns: 1fr;
-  }
 }

@@ -26,6 +26,7 @@ import {
   normalizePagination,
   paginateRows
 } from '../../shared/utils/pagination';
+import { scrollToElement } from '../../shared/utils/scroll-to-element';
 
 interface DeleteContributionDialogData {
   contributorName: string;
@@ -114,6 +115,9 @@ export class Contributions {
 
   protected readonly isEditing = computed(() => Boolean(this.editingContribution()));
   protected readonly currencyCode = computed(() => this.config.currencyCode());
+  protected readonly totalContributions = computed(() => {
+    return this.contributions().reduce((total, contribution) => total + contribution.monto, 0);
+  });
 
   protected readonly contributorNameById = computed(() => {
     return new Map(this.contributors().map((contributor) => [contributor.id, contributor.nombre]));
@@ -247,6 +251,7 @@ export class Contributions {
       monto: contribution.monto,
       nota: contribution.nota ?? ''
     });
+    scrollToElement('contribution-editor');
   }
 
   protected cancelEdit(): void {

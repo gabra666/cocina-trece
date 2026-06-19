@@ -25,6 +25,7 @@ import {
   normalizePagination,
   paginateRows
 } from '../../../shared/utils/pagination';
+import { scrollToElement } from '../../../shared/utils/scroll-to-element';
 
 interface DeactivateRestaurantDialogData {
   restaurantName: string;
@@ -212,6 +213,7 @@ export class RestaurantsAdmin {
       telefono: restaurant.telefono ?? '',
       activo: restaurant.activo
     });
+    scrollToElement('restaurant-editor');
   }
 
   protected cancelEdit(): void {

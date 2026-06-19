@@ -27,6 +27,7 @@ import {
   normalizePagination,
   paginateRows
 } from '../../shared/utils/pagination';
+import { scrollToElement } from '../../shared/utils/scroll-to-element';
 
 interface DeleteRechargeDialogData {
   restaurantName: string;
@@ -226,7 +227,7 @@ export class Budget {
     const availableBalance = this.getAvailableGeneralBalance(currentRecharge);
 
     if (amount > availableBalance) {
-      this.error.set('El saldo general no alcanza para esta recarga.');
+      this.error.set('El saldo en banco no alcanza para esta recarga.');
       return;
     }
 
@@ -271,6 +272,7 @@ export class Budget {
       monto: recharge.monto,
       nota: recharge.nota ?? ''
     });
+    scrollToElement('recharge-editor');
   }
 
   protected cancelEdit(): void {
@@ -391,7 +393,7 @@ export class Budget {
   }
 
   private getAvailableGeneralBalance(currentRecharge: RestaurantRecharge | null): number {
-    return (this.snapshot()?.saldo_general ?? 0) + (currentRecharge?.monto ?? 0);
+    return (this.snapshot()?.saldo_banco ?? 0) + (currentRecharge?.monto ?? 0);
   }
 
   private getErrorMessage(error: unknown): string {
