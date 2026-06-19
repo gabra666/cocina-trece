@@ -95,7 +95,7 @@ export class Budget {
   protected readonly error = signal<string | null>(null);
   protected readonly success = signal<string | null>(null);
   protected readonly pageSizeOptions = PAGE_SIZE_OPTIONS;
-  protected readonly balanceColumns = ['restaurante', 'recargado', 'consumido', 'saldo'];
+  protected readonly balanceColumns = ['restaurante', 'saldo', 'recargado', 'consumido'];
   protected readonly rechargeColumns = ['fecha', 'restaurante', 'monto', 'nota', 'acciones'];
   protected readonly balancesPagination = signal<PaginationState>(DEFAULT_PAGINATION);
   protected readonly rechargesPagination = signal<PaginationState>(DEFAULT_PAGINATION);

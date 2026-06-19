@@ -49,7 +49,7 @@
         <button mat-button type="button" (click)="signOut()">Salir</button>
       } @else {
         <button mat-flat-button type="button" (click)="signIn()" [disabled]="auth.status() === 'loading'">
-          {{ auth.status() === 'loading' ? 'Conectando...' : 'Entrar' }}
+          {{ auth.status() === 'loading' ? 'Conectando...' : auth.sessionExpired() ? 'Reconectar' : 'Entrar' }}
         </button>
       }
     </mat-toolbar>

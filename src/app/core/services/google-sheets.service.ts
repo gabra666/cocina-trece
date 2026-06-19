@@ -165,7 +165,7 @@ export class GoogleSheetsService {
   }
 
   private requireAccessToken(): string {
-    const token = this.auth.accessToken();
+    const token = this.auth.getValidAccessToken();
 
     if (!token) {
       throw new Error('Inicia sesión con Google antes de leer la hoja.');
@@ -194,6 +194,11 @@ export class GoogleSheetsService {
   private async ensureOk(response: Response, fallbackMessage: string): Promise<void> {
     if (response.ok) {
       return;
+    }
+
+    if (response.status === 401) {
+      this.auth.handleUnauthorized();
+      throw new Error('Tu sesión de Google venció. Vuelve a entrar para continuar.');
     }
 
     let message = fallbackMessage;

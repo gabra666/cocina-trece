@@ -61,7 +61,7 @@ h1 {
 
 .summary-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 280px);
   gap: 12px;
   margin-bottom: 18px;
 }
@@ -132,6 +132,41 @@ mat-form-field {
   margin-top: 18px;
 }
 
+.table-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  margin-bottom: 16px;
+  overflow: hidden;
+  border: 1px solid #e1e6ef;
+  border-radius: 8px;
+  background: #e1e6ef;
+}
+
+.table-summary > div {
+  min-width: 0;
+  background: #f8fafc;
+  padding: 10px 12px;
+}
+
+.table-summary span,
+.table-summary strong {
+  display: block;
+}
+
+.table-summary span {
+  margin-bottom: 3px;
+  color: #667085;
+  font-size: 0.72rem;
+}
+
+.table-summary strong {
+  color: #344054;
+  font-size: 0.95rem;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
 .table-wrap {
   width: 100%;
   min-width: 0;
@@ -175,7 +210,6 @@ mat-form-field {
 }
 
 @media (max-width: 900px) {
-  .summary-grid,
   .content-grid {
     grid-template-columns: 1fr;
   }
@@ -201,11 +235,19 @@ mat-form-field {
     font-size: 0.95rem;
     line-height: 1.5;
   }
+
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 420px) {
   .app-shell {
     width: 100%;
     padding: 16px 10px;
+  }
+
+  .table-summary {
+    grid-template-columns: 1fr;
   }
 }

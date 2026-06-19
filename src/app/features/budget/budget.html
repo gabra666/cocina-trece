@@ -35,22 +35,6 @@
           <span>Saldo general</span>
           <strong>{{ snapshot()?.saldo_general ?? 0 | currency: currencyCode() : 'symbol-narrow' : '1.0-0' }}</strong>
         </div>
-        <div class="summary-item">
-          <span>Total aportado</span>
-          <strong>{{ snapshot()?.total_aportes ?? 0 | currency: currencyCode() : 'symbol-narrow' : '1.0-0' }}</strong>
-        </div>
-        <div class="summary-item">
-          <span>Comidas directas</span>
-          <strong>
-            {{ snapshot()?.total_comidas_generales ?? 0 | currency: currencyCode() : 'symbol-narrow' : '1.0-0' }}
-          </strong>
-        </div>
-        <div class="summary-item">
-          <span>Recargas</span>
-          <strong>
-            {{ snapshot()?.total_recargas_restaurantes ?? 0 | currency: currencyCode() : 'symbol-narrow' : '1.0-0' }}
-          </strong>
-        </div>
       </section>
 
       <section class="content-grid">
@@ -139,12 +123,42 @@
           </mat-card-actions>
 
           <mat-card-content>
+            <div class="table-summary" aria-label="Resumen del presupuesto">
+              <div>
+                <span>Total aportado</span>
+                <strong>
+                  {{ snapshot()?.total_aportes ?? 0 | currency: currencyCode() : 'symbol-narrow' : '1.0-0' }}
+                </strong>
+              </div>
+              <div>
+                <span>Comidas directas</span>
+                <strong>
+                  {{ snapshot()?.total_comidas_generales ?? 0 | currency: currencyCode() : 'symbol-narrow' : '1.0-0' }}
+                </strong>
+              </div>
+              <div>
+                <span>Recargas</span>
+                <strong>
+                  {{
+                    snapshot()?.total_recargas_restaurantes ?? 0 | currency: currencyCode() : 'symbol-narrow' : '1.0-0'
+                  }}
+                </strong>
+              </div>
+            </div>
+
             @if (balances().length > 0) {
               <div class="table-wrap">
                 <table mat-table [dataSource]="pagedBalances()">
                   <ng-container matColumnDef="restaurante">
                     <th mat-header-cell *matHeaderCellDef>Restaurante</th>
                     <td mat-cell *matCellDef="let balance">{{ balance.restaurante_nombre }}</td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="saldo">
+                    <th mat-header-cell *matHeaderCellDef>Saldo</th>
+                    <td mat-cell *matCellDef="let balance" [class.negative]="balance.saldo < 0">
+                      {{ balance.saldo | currency: currencyCode() : 'symbol-narrow' : '1.0-0' }}
+                    </td>
                   </ng-container>
 
                   <ng-container matColumnDef="recargado">
@@ -158,13 +172,6 @@
                     <th mat-header-cell *matHeaderCellDef>Consumido</th>
                     <td mat-cell *matCellDef="let balance">
                       {{ balance.consumido | currency: currencyCode() : 'symbol-narrow' : '1.0-0' }}
-                    </td>
-                  </ng-container>
-
-                  <ng-container matColumnDef="saldo">
-                    <th mat-header-cell *matHeaderCellDef>Saldo</th>
-                    <td mat-cell *matCellDef="let balance" [class.negative]="balance.saldo < 0">
-                      {{ balance.saldo | currency: currencyCode() : 'symbol-narrow' : '1.0-0' }}
                     </td>
                   </ng-container>
 

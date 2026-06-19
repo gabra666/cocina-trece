@@ -116,7 +116,7 @@
               type="submit"
               [disabled]="saving() || selectableRestaurants().length === 0"
             >
-              {{ saving() ? 'Guardando...' : isEditing() ? 'Guardar cambios' : 'Guardar comida' }}
+              {{ saving() ? 'Guardando...' : isEditing() ? 'Guardar cambios' : 'Guardar' }}
             </button>
 
             @if (isEditing()) {
