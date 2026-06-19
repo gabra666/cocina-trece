@@ -69,7 +69,7 @@ export class MealsService {
     const row = rows.find((candidate) => candidate.value.id === id);
 
     if (!row) {
-      throw new Error('No se encontrÃ³ la comida en la hoja.');
+      throw new Error('No se encontró la comida solicitada.');
     }
 
     return row;

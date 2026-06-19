@@ -60,7 +60,7 @@ export class RestaurantRechargesService {
     const row = rows.find((entry) => entry.value.id === id);
 
     if (!row) {
-      throw new Error('No se encontrÃ³ la recarga en la hoja.');
+      throw new Error('No se encontró la recarga solicitada.');
     }
 
     return row;

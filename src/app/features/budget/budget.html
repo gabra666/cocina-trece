@@ -29,17 +29,17 @@
     } @else if (loading()) {
       <div class="loading-state">
         <mat-spinner diameter="28"></mat-spinner>
-        <span>Leyendo Google Sheets...</span>
+        <span>Actualizando saldos...</span>
       </div>
     } @else {
       <section class="balance-breakdown" aria-label="Desglose del saldo">
-        <div>
+        <div class="bank">
           <span>Saldo en banco</span>
           <strong [class.negative]="(snapshot()?.saldo_banco ?? 0) < 0">
             {{ snapshot()?.saldo_banco ?? 0 | currency: currencyCode() : 'symbol-narrow' : '1.0-0' }}
           </strong>
         </div>
-        <div>
+        <div class="restaurants">
           <span>Saldo prepagado en restaurantes</span>
           <strong [class.negative]="(snapshot()?.saldo_restaurantes ?? 0) < 0">
             {{ snapshot()?.saldo_restaurantes ?? 0 | currency: currencyCode() : 'symbol-narrow' : '1.0-0' }}
@@ -191,7 +191,7 @@
       <mat-card appearance="outlined" class="history-card">
         <mat-card-header>
           <mat-card-title>Historial de recargas</mat-card-title>
-          <mat-card-subtitle>Movimientos registrados en RecargasRestaurantes</mat-card-subtitle>
+          <mat-card-subtitle>Movimientos entre el saldo en banco y los restaurantes</mat-card-subtitle>
         </mat-card-header>
 
         <mat-card-content>

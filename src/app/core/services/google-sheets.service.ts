@@ -57,7 +57,7 @@ export class GoogleSheetsService {
       body: JSON.stringify({ values: [row] })
     });
 
-    await this.ensureOk(response, `No se pudo guardar en ${sheetName}.`);
+    await this.ensureOk(response, 'No se pudo guardar la información.');
   }
 
   async updateRow(sheetName: string, rowNumber: number, row: string[]): Promise<void> {
@@ -75,7 +75,7 @@ export class GoogleSheetsService {
       body: JSON.stringify({ values: [row] })
     });
 
-    await this.ensureOk(response, `No se pudo actualizar ${sheetName}.`);
+    await this.ensureOk(response, 'No se pudo actualizar la información.');
   }
 
   async deleteRow(sheetName: string, rowNumber: number): Promise<void> {
@@ -104,7 +104,7 @@ export class GoogleSheetsService {
       })
     });
 
-    await this.ensureOk(response, `No se pudo eliminar la fila en ${sheetName}.`);
+    await this.ensureOk(response, 'No se pudo eliminar la información.');
   }
 
   private async getValues(rangeName: string): Promise<string[][]> {
@@ -116,7 +116,7 @@ export class GoogleSheetsService {
       }
     });
 
-    await this.ensureOk(response, `No se pudo leer ${rangeName}.`);
+    await this.ensureOk(response, 'No se pudo cargar la información.');
     const body = (await response.json()) as { values?: string[][] };
     return body.values ?? [];
   }
@@ -135,7 +135,7 @@ export class GoogleSheetsService {
       }
     });
 
-    await this.ensureOk(response, 'No se pudo leer la metadata de la hoja.');
+    await this.ensureOk(response, 'No se pudo preparar la información.');
 
     const body = (await response.json()) as {
       sheets?: Array<{
@@ -158,7 +158,7 @@ export class GoogleSheetsService {
     const sheetId = this.sheetIdByName.get(sheetName);
 
     if (sheetId === undefined) {
-      throw new Error(`No se encontró la pestaña ${sheetName}.`);
+      throw new Error('No se encontró la información solicitada.');
     }
 
     return sheetId;
@@ -168,7 +168,7 @@ export class GoogleSheetsService {
     const token = this.auth.getValidAccessToken();
 
     if (!token) {
-      throw new Error('Inicia sesión con Google antes de leer la hoja.');
+      throw new Error('Inicia sesión para consultar la información.');
     }
 
     if (environment.spreadsheetId.startsWith('REPLACE_')) {
@@ -201,15 +201,6 @@ export class GoogleSheetsService {
       throw new Error('Tu sesión de Google venció. Vuelve a entrar para continuar.');
     }
 
-    let message = fallbackMessage;
-
-    try {
-      const body = (await response.json()) as { error?: { message?: string } };
-      message = body.error?.message ?? message;
-    } catch {
-      message = `${message} Código HTTP ${response.status}.`;
-    }
-
-    throw new Error(message);
+    throw new Error(fallbackMessage);
   }
 }

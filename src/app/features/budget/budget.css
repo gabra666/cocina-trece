@@ -98,8 +98,28 @@ h1 {
   background: #f6f9ff;
 }
 
-.balance-breakdown .total strong {
+.balance-breakdown .bank {
+  background: #eef5ff;
+}
+
+.balance-breakdown .bank strong {
   color: #205493;
+}
+
+.balance-breakdown .restaurants {
+  background: #eef9f6;
+}
+
+.balance-breakdown .restaurants strong {
+  color: #15705f;
+}
+
+.balance-breakdown .total strong {
+  color: #344054;
+}
+
+.balance-breakdown strong.negative {
+  color: #b42318;
 }
 
 .content-grid {

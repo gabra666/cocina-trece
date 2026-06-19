@@ -61,7 +61,7 @@ export class ContributionsService {
     const row = rows.find((entry) => entry.value.id === id);
 
     if (!row) {
-      throw new Error('No se encontró el aporte en la hoja.');
+      throw new Error('No se encontró el aporte solicitado.');
     }
 
     return row;

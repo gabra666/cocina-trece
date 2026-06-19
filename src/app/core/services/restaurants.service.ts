@@ -52,7 +52,7 @@ export class RestaurantsService {
     const row = rows.find((entry) => entry.value.id === id);
 
     if (!row) {
-      throw new Error('No se encontró el restaurante en la hoja.');
+      throw new Error('No se encontró el restaurante solicitado.');
     }
 
     return row;

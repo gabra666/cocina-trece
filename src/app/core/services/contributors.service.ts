@@ -50,7 +50,7 @@ export class ContributorsService {
     const row = rows.find((entry) => entry.value.id === id);
 
     if (!row) {
-      throw new Error('No se encontró el contribuidor en la hoja.');
+      throw new Error('No se encontró el contribuidor solicitado.');
     }
 
     return row;

@@ -57,7 +57,7 @@
     <mat-card appearance="outlined">
       <mat-card-header>
         <mat-card-title>Lista de contribuidores</mat-card-title>
-        <mat-card-subtitle>Datos de la pestaña Contribuidores</mat-card-subtitle>
+        <mat-card-subtitle>Personas disponibles para registrar aportes</mat-card-subtitle>
       </mat-card-header>
 
       <mat-card-actions align="end">
@@ -72,7 +72,7 @@
         } @else if (loading()) {
           <div class="loading-state">
             <mat-spinner diameter="28"></mat-spinner>
-            <span>Leyendo Google Sheets...</span>
+            <span>Actualizando contribuidores...</span>
           </div>
         } @else if (contributors().length > 0) {
           <div class="table-wrap">
